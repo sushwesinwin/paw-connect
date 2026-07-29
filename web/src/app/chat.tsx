@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatCitation, sendChatMessage } from "@/lib/api";
 
@@ -66,9 +67,9 @@ export function Chat() {
   }
 
   return (
-    <section className="flex min-h-[560px] flex-col rounded-2xl border bg-card/95 shadow-xl shadow-sky-950/5 md:min-h-[640px]">
+    <section className="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border bg-card/95 shadow-xl shadow-sky-950/5 md:min-h-[640px]">
       <div className="border-b px-4 py-3 md:px-5 md:py-4">
-        <h2 className="font-heading text-lg font-semibold md:text-xl">
+        <h2 className="font-heading text-xl font-semibold tracking-normal text-primary md:text-2xl">
           Pet assistant
         </h2>
         <p className="text-sm text-zinc-600">
@@ -76,11 +77,11 @@ export function Chat() {
         </p>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-5 md:py-5">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-5 md:py-5">
         {messages.map((message) => (
           <article
             key={message.id}
-            className={`max-w-[92%] rounded-lg px-4 py-3 text-sm leading-6 md:max-w-[82%] ${
+            className={`max-w-[92%] break-words rounded-lg px-4 py-3 text-sm leading-6 md:max-w-[82%] ${
               message.role === "user"
                 ? "ml-auto bg-primary text-primary-foreground"
                 : "bg-muted text-foreground"
@@ -109,21 +110,22 @@ export function Chat() {
 
       <form onSubmit={handleSubmit} className="border-t p-3 md:p-4">
         {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+        <div className="flex items-center gap-2 rounded-full border bg-background p-1.5">
           <input
-            className="min-w-0 flex-1 rounded-md border bg-background px-4 py-3 text-sm outline-none focus:border-ring"
+            className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="How often should I groom a Persian cat?"
+            placeholder="Ask Milo to do something..."
             aria-label="Pet care question"
           />
           <Button
-            className="rounded-full px-6"
+            className="size-10 shrink-0 rounded-full p-0 sm:h-11 sm:w-auto sm:px-7"
             disabled={!input.trim() || isSending}
-            size="lg"
+            aria-label="Send message"
             type="submit"
           >
-            Send
+            <Send className="size-4 sm:hidden" aria-hidden="true" />
+            <span className="hidden sm:inline">Send</span>
           </Button>
         </div>
       </form>

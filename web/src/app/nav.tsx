@@ -15,8 +15,8 @@ export function AppNav() {
 
   return (
     <header className="sticky top-2 z-20 px-3 md:top-4 md:px-4">
-      <div className="relative mx-auto flex w-fit max-w-full flex-col gap-2 rounded-2xl border bg-white/90 px-3 py-2.5 shadow-lg shadow-sky-950/5 backdrop-blur md:flex-row md:items-center md:gap-5 md:rounded-full md:px-5 md:py-3">
-        <div className="flex items-center justify-between gap-3">
+      <div className="relative mx-auto flex w-full max-w-full flex-col gap-2 rounded-2xl border bg-white/90 px-3 py-2.5 shadow-lg shadow-sky-950/5 backdrop-blur sm:w-fit md:flex-row md:items-center md:gap-5 md:rounded-full md:px-5 md:py-3">
+        <div className="flex items-center justify-between gap-2">
           <a href="#chat" className="flex items-center gap-2">
             <PawPrint className="size-5 text-primary" aria-hidden="true" />
             <span className="font-heading text-base font-semibold text-primary md:text-lg">
@@ -28,7 +28,7 @@ export function AppNav() {
               href="#chat"
               className={cn(
                 buttonVariants(),
-                "h-9 rounded-full px-4 text-sm font-normal",
+                "h-9 rounded-full px-3 text-sm font-normal sm:px-4",
               )}
             >
               Ask PawConnect
