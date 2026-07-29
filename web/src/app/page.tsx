@@ -1,6 +1,30 @@
-import { ArrowRight, PawPrint } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  HeartHandshake,
+  PawPrint,
+  Search,
+} from "lucide-react";
 import { Chat } from "./chat";
 import { AppNav } from "./nav";
+
+const services = [
+  {
+    title: "Adoption search",
+    description: "Find pets ready for a new home and ask Milo for matching tips.",
+    icon: HeartHandshake,
+  },
+  {
+    title: "Lost & found",
+    description: "Post a missing pet, report a found pet, and search recent listings.",
+    icon: Search,
+  },
+  {
+    title: "Vet & grooming",
+    description: "Request appointment times for checkups, grooming, and care visits.",
+    icon: CalendarDays,
+  },
+];
 
 export default function Home() {
   return (
@@ -40,6 +64,34 @@ export default function Home() {
             aria-hidden="true"
           />
         </div>
+        <section id="services" className="scroll-mt-28">
+          <div className="mb-5 max-w-2xl">
+            <p className="mb-2 text-sm font-medium text-primary">Services</p>
+            <h2 className="font-heading text-2xl font-normal leading-tight md:text-3xl">
+              Pet care workflows in one place.
+            </h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {services.map((service) => {
+              const Icon = service.icon;
+
+              return (
+                <article
+                  key={service.title}
+                  className="rounded-2xl border bg-white/85 p-5 shadow-lg shadow-sky-950/5"
+                >
+                  <Icon className="mb-4 size-6 text-primary" aria-hidden="true" />
+                  <h3 className="font-heading text-lg font-medium">
+                    {service.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {service.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        </section>
         <div id="features" className="scroll-mt-28 pb-8">
           <div id="chat" className="scroll-mt-28">
             <Chat />
