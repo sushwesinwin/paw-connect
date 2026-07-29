@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, PawPrint, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,9 +12,33 @@ const navItems = [
 
 export function AppNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+
+      if (isOpen || currentScrollY < 16) {
+        setIsHidden(false);
+      } else {
+        setIsHidden(currentScrollY > lastScrollY.current && currentScrollY > 80);
+      }
+
+      lastScrollY.current = currentScrollY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
 
   return (
-    <header className="sticky top-2 z-20 px-3 md:top-4 md:px-4">
+    <header
+      className={cn(
+        "sticky top-2 z-20 px-3 transition-transform duration-300 md:top-4 md:px-4",
+        isHidden ? "pointer-events-none -translate-y-24" : "translate-y-0",
+      )}
+    >
       <div className="relative mx-auto flex w-full max-w-full flex-col gap-2 rounded-2xl border bg-white/90 px-3 py-2.5 shadow-lg shadow-sky-950/5 backdrop-blur sm:w-fit md:flex-row md:items-center md:gap-5 md:rounded-full md:px-5 md:py-3">
         <div className="flex items-center justify-between gap-2">
           <a href="#chat" className="flex items-center gap-2">
