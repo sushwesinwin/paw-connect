@@ -4,7 +4,7 @@ import {
   Injectable,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ChatRole } from '@prisma/client';
+import { ChatRole, ListingType, ServiceType } from '@prisma/client';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -23,6 +23,13 @@ type OpenRouterResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
 
+type ChatHistory = Array<{ role: ChatRole; content: string }>;
+
+type WorkflowResponse = {
+  answer: string;
+  citations: Array<{ title: string; category: string }>;
+};
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -37,12 +44,30 @@ export class ChatService {
     }
 
     const session = await this.getSession(input.sessionId);
-    const sources = await this.knowledgeService.searchForContext(message);
+    const history = await this.getHistory(session.id);
 
     await this.prisma.chatMessage.create({
       data: { sessionId: session.id, role: ChatRole.USER, content: message },
     });
 
+    const workflow = await this.handleWorkflow(message, history);
+    if (workflow) {
+      await this.prisma.chatMessage.create({
+        data: {
+          sessionId: session.id,
+          role: ChatRole.ASSISTANT,
+          content: workflow.answer,
+        },
+      });
+
+      return {
+        sessionId: session.id,
+        answer: workflow.answer,
+        citations: workflow.citations,
+      };
+    }
+
+    const sources = await this.knowledgeService.searchForContext(message);
     const answer = await this.askModel(message, sources);
 
     await this.prisma.chatMessage.create({
@@ -67,6 +92,172 @@ export class ChatService {
     }
 
     return this.prisma.chatSession.create({ data: {} });
+  }
+
+  private getHistory(sessionId: string) {
+    return this.prisma.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+      take: 12,
+    });
+  }
+
+  private async handleWorkflow(
+    message: string,
+    history: ChatHistory,
+  ): Promise<WorkflowResponse | undefined> {
+    const text = message.toLowerCase();
+    const previousAssistant = [...history]
+      .reverse()
+      .find((item) => item.role === ChatRole.ASSISTANT)?.content.toLowerCase();
+
+    if (
+      this.isAppointmentIntent(text) ||
+      (previousAssistant?.includes('appointment') &&
+        previousAssistant.includes('please reply with'))
+    ) {
+      return this.handleAppointment(message, history);
+    }
+
+    if (
+      this.isListingIntent(text) ||
+      (previousAssistant?.includes('pet listing') &&
+        previousAssistant.includes('please reply with'))
+    ) {
+      return this.handleListing(message, history);
+    }
+
+    return undefined;
+  }
+
+  private async handleAppointment(
+    message: string,
+    history: ChatHistory,
+  ): Promise<WorkflowResponse> {
+    const fields = parseFields([...history.map((item) => item.content), message]);
+    const serviceType = inferServiceType(
+      `${message}\n${history.map((item) => item.content).join('\n')}`,
+    );
+    const preferredAt = parseDate(fields.preferredAt);
+    const missing = [
+      ['petName', 'pet name'],
+      ['petType', 'pet type'],
+      ['preferredAt', 'preferred date and time'],
+      ['contactName', 'contact name'],
+    ].filter(([key]) => !fields[key]);
+
+    if (!fields.contactEmail && !fields.contactPhone) {
+      missing.push(['contact', 'contact email or phone']);
+    }
+
+    if (!serviceType) {
+      missing.push(['serviceType', 'service type: grooming or vet']);
+    }
+
+    if (fields.preferredAt && !preferredAt) {
+      missing.push(['validDate', 'a valid date and time, like 2026-08-02 10:00']);
+    }
+
+    if (missing.length) {
+      return {
+        answer: `I can create an appointment request. Please reply with: ${missing
+          .map(([, label]) => label)
+          .join(', ')}.\n\nExample:\npet name: Milo\npet type: cat\npreferred date and time: 2026-08-02 10:00\ncontact name: Su\ncontact email: su@example.com`,
+        citations: [],
+      };
+    }
+
+    if (!serviceType || !preferredAt) {
+      throw new BadRequestException('Appointment request is incomplete');
+    }
+
+    await this.prisma.appointmentRequest.create({
+      data: {
+        serviceType,
+        petName: fields.petName,
+        petType: fields.petType,
+        preferredAt,
+        contactName: fields.contactName,
+        contactPhone: fields.contactPhone,
+        contactEmail: fields.contactEmail,
+        notes: fields.notes,
+      },
+    });
+
+    return {
+      answer: `Done. I created a ${serviceType.toLowerCase()} appointment request for ${fields.petName}.`,
+      citations: [],
+    };
+  }
+
+  private async handleListing(
+    message: string,
+    history: ChatHistory,
+  ): Promise<WorkflowResponse> {
+    const combined = `${message}\n${history.map((item) => item.content).join('\n')}`;
+    const fields = parseFields([combined]);
+    const type = inferListingType(combined);
+    const missing = [
+      ['petType', 'pet type'],
+      ['location', 'location'],
+      ['description', 'description'],
+      ['contactName', 'contact name'],
+    ].filter(([key]) => !fields[key]);
+
+    if (!fields.contactEmail && !fields.contactPhone) {
+      missing.push(['contact', 'contact email or phone']);
+    }
+
+    if (!type) {
+      missing.push(['listingType', 'listing type: lost, found, or adoption']);
+    }
+
+    if (missing.length) {
+      return {
+        answer: `I can create a pet listing. Please reply with: ${missing
+          .map(([, label]) => label)
+          .join(', ')}.\n\nExample:\nlisting type: lost\npet name: Cookie\npet type: dog\nlocation: Bedok\ndescription: brown poodle last seen near the park\ncontact name: Su\ncontact email: su@example.com`,
+        citations: [],
+      };
+    }
+
+    if (!type) {
+      throw new BadRequestException('Listing request is incomplete');
+    }
+
+    await this.prisma.petListing.create({
+      data: {
+        type,
+        petName: fields.petName,
+        petType: fields.petType,
+        breed: fields.breed,
+        age: fields.age,
+        location: fields.location,
+        description: fields.description,
+        contactName: fields.contactName,
+        contactPhone: fields.contactPhone,
+        contactEmail: fields.contactEmail,
+      },
+    });
+
+    return {
+      answer: `Done. I posted the ${type.toLowerCase()} listing for ${fields.petName || fields.petType}.`,
+      citations: [],
+    };
+  }
+
+  private isAppointmentIntent(text: string) {
+    if (/how often|how do i|should i groom|tips|advice/.test(text)) {
+      return false;
+    }
+
+    return /appointment|book|schedule|request.*(groom|gromm|vet)|need.*(groom|gromm|vet)|vet visit|checkup/.test(
+      text,
+    );
+  }
+
+  private isListingIntent(text: string) {
+    return /lost|found|adopt|adoption|listing|missing pet/.test(text);
   }
 
   private async askModel(message: string, sources: Source[]) {
@@ -123,4 +314,68 @@ export class ChatService {
 
     return answer;
   }
+}
+
+function parseFields(messages: string[]) {
+  const fields: Record<string, string> = {};
+  const aliases: Record<string, string> = {
+    'pet name': 'petName',
+    pet: 'petName',
+    'pet type': 'petType',
+    type: 'listingType',
+    breed: 'breed',
+    age: 'age',
+    location: 'location',
+    description: 'description',
+    details: 'description',
+    'contact name': 'contactName',
+    name: 'contactName',
+    email: 'contactEmail',
+    'contact email': 'contactEmail',
+    phone: 'contactPhone',
+    'contact phone': 'contactPhone',
+    notes: 'notes',
+    'preferred date and time': 'preferredAt',
+    'preferred time': 'preferredAt',
+    'preferred at': 'preferredAt',
+    date: 'preferredAt',
+    service: 'serviceType',
+    'service type': 'serviceType',
+    'listing type': 'listingType',
+  };
+
+  for (const message of messages) {
+    for (const part of message.split(/\n|,/)) {
+      const match = part.match(/^\s*([a-zA-Z ]{2,28})\s*[:=-]\s*(.+)\s*$/);
+      if (!match) continue;
+
+      const key = aliases[match[1].trim().toLowerCase()];
+      const value = match[2].trim();
+      if (key && value) fields[key] = value;
+    }
+  }
+
+  return fields;
+}
+
+function parseDate(value?: string) {
+  if (!value) return undefined;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function inferServiceType(text: string) {
+  const lower = text.toLowerCase();
+  if (/groom|gromm/.test(lower)) return ServiceType.GROOMING;
+  if (/vet|checkup|vaccine/.test(lower)) return ServiceType.VET;
+  return undefined;
+}
+
+function inferListingType(text: string) {
+  const lower = text.toLowerCase();
+  if (/lost|missing/.test(lower)) return ListingType.LOST;
+  if (/found/.test(lower)) return ListingType.FOUND;
+  if (/adopt|adoption/.test(lower)) return ListingType.ADOPTION;
+  return undefined;
 }

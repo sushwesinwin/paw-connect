@@ -9,7 +9,14 @@ describe('ChatService', () => {
       create: jest.fn().mockResolvedValue({ id: 'session-1' }),
     },
     chatMessage: {
+      findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
+    },
+    appointmentRequest: {
+      create: jest.fn().mockResolvedValue({ id: 'appointment-1' }),
+    },
+    petListing: {
+      create: jest.fn().mockResolvedValue({ id: 'listing-1' }),
     },
   };
   const knowledgeService = {
@@ -26,6 +33,7 @@ describe('ChatService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.chatMessage.findMany.mockResolvedValue([]);
     process.env.OPENROUTER_API_KEY = 'test-key';
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -70,5 +78,51 @@ describe('ChatService', () => {
     await expect(service.create({ message: 'hello' })).rejects.toThrow(
       ServiceUnavailableException,
     );
+  });
+
+  it('asks for appointment details when the user requests grooming', async () => {
+    await expect(
+      service.create({ message: 'I want to book grooming for my cat' }),
+    ).resolves.toEqual({
+      sessionId: 'session-1',
+      answer: expect.stringContaining('Please reply with'),
+      citations: [],
+    });
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(prisma.appointmentRequest.create).not.toHaveBeenCalled();
+  });
+
+  it('creates an appointment when required chat details are provided', async () => {
+    prisma.chatMessage.findMany.mockResolvedValue([
+      {
+        role: ChatRole.ASSISTANT,
+        content:
+          'I can create an appointment request. Please reply with: pet name.',
+      },
+    ]);
+
+    await expect(
+      service.create({
+        sessionId: 'session-1',
+        message:
+          'service type: grooming\npet name: Milo\npet type: cat\npreferred date and time: 2026-08-02 10:00\ncontact name: Su\ncontact email: su@example.com',
+      }),
+    ).resolves.toEqual({
+      sessionId: 'session-1',
+      answer: 'Done. I created a grooming appointment request for Milo.',
+      citations: [],
+    });
+
+    expect(prisma.appointmentRequest.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        serviceType: 'GROOMING',
+        petName: 'Milo',
+        petType: 'cat',
+        contactName: 'Su',
+        contactEmail: 'su@example.com',
+      }),
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

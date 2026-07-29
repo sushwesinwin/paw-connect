@@ -13,16 +13,19 @@ const services = [
     title: "Adoption search",
     description: "Find pets ready for a new home and ask Milo for matching tips.",
     icon: HeartHandshake,
+    prompt: "Ask Milo about adoption",
   },
   {
     title: "Lost & found",
     description: "Post a missing pet, report a found pet, and search recent listings.",
     icon: Search,
+    prompt: "Post from chat",
   },
   {
     title: "Vet & grooming",
     description: "Request appointment times for checkups, grooming, and care visits.",
     icon: CalendarDays,
+    prompt: "Book from chat",
   },
 ];
 
@@ -76,8 +79,9 @@ export default function Home() {
               const Icon = service.icon;
 
               return (
-                <article
+                <a
                   key={service.title}
+                  href="#chat"
                   className="rounded-2xl border bg-white/85 p-5 shadow-lg shadow-sky-950/5"
                 >
                   <Icon className="mb-4 size-6 text-primary" aria-hidden="true" />
@@ -87,7 +91,10 @@ export default function Home() {
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     {service.description}
                   </p>
-                </article>
+                  <p className="mt-4 text-sm font-medium text-primary">
+                    {service.prompt}
+                  </p>
+                </a>
               );
             })}
           </div>
