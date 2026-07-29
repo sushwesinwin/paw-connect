@@ -25,6 +25,18 @@ describe('AppModule (e2e)', () => {
         ...data,
       })),
     },
+    knowledgeDocument: {
+      findMany: jest.fn().mockResolvedValue([
+        {
+          id: 'knowledge-1',
+          title: 'Persian Cat Grooming',
+          category: 'grooming',
+          content: 'Persian cats usually need daily brushing.',
+          createdAt: new Date('2026-07-29T00:00:00.000Z'),
+          updatedAt: new Date('2026-07-29T00:00:00.000Z'),
+        },
+      ]),
+    },
   };
 
   beforeEach(async () => {
@@ -88,6 +100,17 @@ describe('AppModule (e2e)', () => {
       .expect((response) => {
         expect(response.body).toEqual(
           expect.objectContaining({ id: 'appointment-1', status: 'PENDING' }),
+        );
+      });
+  });
+
+  it('/knowledge/search (GET)', () => {
+    return request(url)
+      .get('/knowledge/search?q=persian')
+      .expect(200)
+      .expect((response) => {
+        expect(response.body[0]).toEqual(
+          expect.objectContaining({ title: 'Persian Cat Grooming' }),
         );
       });
   });
