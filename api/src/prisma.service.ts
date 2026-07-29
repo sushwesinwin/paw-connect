@@ -21,9 +21,6 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    console.log(
-      `Prisma database URL: ${databaseUrl.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:***@')}`,
-    );
     await this.$connect();
   }
 

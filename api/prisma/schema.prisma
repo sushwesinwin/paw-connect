@@ -6,3 +6,92 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum ListingType {
+  LOST
+  FOUND
+  ADOPTION
+}
+
+enum ServiceType {
+  VET
+  GROOMING
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model KnowledgeDocument {
+  id        String   @id @default(cuid())
+  title     String   @unique
+  category  String
+  content   String
+  embedding Float[]  @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      ChatRole
+  content   String
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId])
+}
+
+model PetListing {
+  id           String      @id @default(cuid())
+  type         ListingType
+  petName      String?
+  petType      String
+  breed        String?
+  age          String?
+  location     String
+  description  String
+  contactName  String
+  contactPhone String?
+  contactEmail String?
+  imageUrl     String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([type])
+  @@index([petType])
+  @@index([location])
+}
+
+model AppointmentRequest {
+  id           String            @id @default(cuid())
+  serviceType  ServiceType
+  petName      String
+  petType      String
+  preferredAt  DateTime
+  contactName  String
+  contactPhone String?
+  contactEmail String?
+  notes        String?
+  status       AppointmentStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([serviceType])
+  @@index([status])
+}
