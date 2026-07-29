@@ -37,10 +37,25 @@ describe('AppModule (e2e)', () => {
         },
       ]),
     },
+    chatSession: {
+      findUnique: jest.fn(),
+      create: jest.fn().mockResolvedValue({ id: 'session-1' }),
+    },
+    chatMessage: {
+      create: jest.fn(),
+    },
   };
+  const originalApiKey = process.env.OPENROUTER_API_KEY;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    process.env.OPENROUTER_API_KEY = 'test-key';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        choices: [{ message: { content: 'Brush Persian cats daily.' } }],
+      }),
+    }) as jest.Mock;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -115,7 +130,25 @@ describe('AppModule (e2e)', () => {
       });
   });
 
+  it('/chat (POST)', () => {
+    return request(url)
+      .post('/chat')
+      .send({ message: 'How often should I groom a Persian cat?' })
+      .expect(201)
+      .expect((response) => {
+        expect(response.body).toEqual({
+          sessionId: 'session-1',
+          answer: 'Brush Persian cats daily.',
+          citations: [{ title: 'Persian Cat Grooming', category: 'grooming' }],
+        });
+      });
+  });
+
   afterEach(async () => {
     await app.close();
+  });
+
+  afterAll(() => {
+    process.env.OPENROUTER_API_KEY = originalApiKey;
   });
 });

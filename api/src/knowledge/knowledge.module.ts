@@ -7,5 +7,6 @@ import { KnowledgeService } from './knowledge.service';
   imports: [PrismaModule],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],
+  exports: [KnowledgeService],
 })
 export class KnowledgeModule {}

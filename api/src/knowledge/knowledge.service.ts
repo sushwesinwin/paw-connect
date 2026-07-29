@@ -34,4 +34,33 @@ export class KnowledgeService {
       },
     });
   }
+
+  searchForContext(message: string, take = 4) {
+    const terms = message
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((term) => term.length > 2)
+      .slice(0, 8);
+
+    if (terms.length === 0) {
+      return [];
+    }
+
+    return this.prisma.knowledgeDocument.findMany({
+      where: {
+        OR: terms.flatMap((term) => [
+          { title: { contains: term, mode: 'insensitive' as const } },
+          { category: { contains: term, mode: 'insensitive' as const } },
+          { content: { contains: term, mode: 'insensitive' as const } },
+        ]),
+      },
+      take,
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        title: true,
+        category: true,
+        content: true,
+      },
+    });
+  }
 }
