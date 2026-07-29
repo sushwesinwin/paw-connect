@@ -66,19 +66,21 @@ export function Chat() {
   }
 
   return (
-    <section className="flex min-h-[calc(100vh-10rem)] flex-col rounded-lg border bg-card">
-      <div className="border-b px-5 py-4">
-        <h2 className="text-lg font-semibold">Pet assistant</h2>
+    <section className="flex min-h-[560px] flex-col rounded-2xl border bg-card/95 shadow-xl shadow-sky-950/5 md:min-h-[640px]">
+      <div className="border-b px-4 py-3 md:px-5 md:py-4">
+        <h2 className="font-heading text-lg font-semibold md:text-xl">
+          Pet assistant
+        </h2>
         <p className="text-sm text-zinc-600">
           Products, vet care, grooming, adoption, lost and found.
         </p>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-5 md:py-5">
         {messages.map((message) => (
           <article
             key={message.id}
-            className={`max-w-[82%] rounded px-4 py-3 text-sm leading-6 ${
+            className={`max-w-[92%] rounded-lg px-4 py-3 text-sm leading-6 md:max-w-[82%] ${
               message.role === "user"
                 ? "ml-auto bg-primary text-primary-foreground"
                 : "bg-muted text-foreground"
@@ -105,9 +107,9 @@ export function Chat() {
         ) : null}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t p-4">
+      <form onSubmit={handleSubmit} className="border-t p-3 md:p-4">
         {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <input
             className="min-w-0 flex-1 rounded-md border bg-background px-4 py-3 text-sm outline-none focus:border-ring"
             value={input}
@@ -115,7 +117,12 @@ export function Chat() {
             placeholder="How often should I groom a Persian cat?"
             aria-label="Pet care question"
           />
-          <Button disabled={!input.trim() || isSending} size="lg" type="submit">
+          <Button
+            className="rounded-full px-6"
+            disabled={!input.trim() || isSending}
+            size="lg"
+            type="submit"
+          >
             Send
           </Button>
         </div>
