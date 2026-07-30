@@ -84,7 +84,11 @@ const listingSchema = z
     contactName: z.string().trim().min(1, "Owner / reporter is required"),
     contactPhone: z.string().optional(),
     contactEmail: z.string().email("Enter a valid email").optional(),
-    imageUrl: z.string().trim().min(1, "Image is required"),
+    imageUrl: z.string().optional(),
+  })
+  .refine((value) => value.type === "ADOPTION" || Boolean(value.imageUrl?.trim()), {
+    message: "Image is required",
+    path: ["imageUrl"],
   })
   .refine((value) => value.contactPhone || value.contactEmail, {
     message: "Phone or email is required",
@@ -290,7 +294,7 @@ export function AdminTable({
                 key={row.id}
                 className="rounded-2xl border bg-white p-3 shadow-sm"
               >
-                {row.kind === "listing" && row.record.imageUrl ? (
+                {section === "lost-found" && row.kind === "listing" && row.record.imageUrl ? (
                   <div className="relative mb-3 aspect-[16/9] overflow-hidden rounded-xl bg-muted">
                     <Image
                       src={row.record.imageUrl}
@@ -365,7 +369,7 @@ export function AdminTable({
             <Table className="min-w-[920px] whitespace-nowrap md:min-w-[1040px]">
               <TableHeader>
                 <TableRow>
-                  {section === "adoption" || section === "lost-found" ? (
+                  {section === "lost-found" ? (
                     <TableHead className="w-[88px]">Image</TableHead>
                   ) : null}
                   {columns.map((column) => (
@@ -377,7 +381,7 @@ export function AdminTable({
               <TableBody>
                 {visibleRows.map((row) => (
                   <TableRow key={row.id}>
-                    {row.kind === "listing" ? (
+                    {section === "lost-found" && row.kind === "listing" ? (
                       <TableCell className="w-[88px]">
                         {row.record.imageUrl ? (
                           <div className="relative h-14 w-20 overflow-hidden rounded-xl bg-muted">
