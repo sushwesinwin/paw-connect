@@ -20,8 +20,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Paw Connect",
-  description: "AI pet care assistant",
+  title: {
+    default: "PawConnect",
+    template: "%s | PawConnect",
+  },
+  description:
+    "PawConnect is an AI pet care assistant for grooming, vet visits, adoption, and lost pet support.",
+  applicationName: "PawConnect",
+  keywords: [
+    "PawConnect",
+    "pet care",
+    "AI assistant",
+    "pet adoption",
+    "lost pets",
+    "vet booking",
+    "pet grooming",
+  ],
+  openGraph: {
+    title: "PawConnect",
+    description:
+      "AI pet care assistant for grooming, vet visits, adoption, and lost pet support.",
+    siteName: "PawConnect",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "PawConnect",
+    description:
+      "AI pet care assistant for grooming, vet visits, adoption, and lost pet support.",
+  },
 };
 
 export default function RootLayout({

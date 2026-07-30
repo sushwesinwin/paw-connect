@@ -1,4 +1,5 @@
-import { ArrowRight, PawPrint } from "lucide-react";
+import { CtaLink } from "@/components/ui/cta-link";
+import { PawPrint } from "lucide-react";
 import Link from "next/link";
 
 const links = [
@@ -51,15 +52,13 @@ export function Footer() {
             <p className="mt-2 leading-6 text-zinc-400">
               Start a chat with Milo for quick care guidance.
             </p>
-            <Link
+            <CtaLink
               href="/assistant"
-              className="group mt-4 inline-flex h-11 w-full items-center justify-center gap-3 rounded-full bg-primary py-1 pl-5 pr-1.5 font-medium text-primary-foreground transition hover:bg-primary/90"
+              size="compact"
+              className="mt-4"
             >
               Ask PawConnect
-              <span className="grid size-8 place-items-center rounded-full bg-white text-primary transition-transform group-hover:translate-x-0.5">
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </span>
-            </Link>
+            </CtaLink>
             <p className="mt-4 text-xs">support@pawconnect.local</p>
           </div>
         </div>

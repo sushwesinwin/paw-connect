@@ -1,11 +1,11 @@
 import {
-  ArrowRight,
   Bot,
   CalendarDays,
   HeartHandshake,
   MessageCircle,
   Search,
 } from "lucide-react";
+import { CtaLink } from "@/components/ui/cta-link";
 import Link from "next/link";
 import { Footer } from "./footer";
 import { AppNav } from "./nav";
@@ -69,15 +69,12 @@ export default function Home() {
               AI answers grounded in product tips, vet guidance, grooming notes,
               adoption advice, and lost pet help.
             </p>
-            <Link
+            <CtaLink
               href="/assistant"
-              className="group mt-6 inline-flex h-12 items-center justify-center gap-3 rounded-full bg-primary py-1 pl-6 pr-1.5 text-sm font-normal text-primary-foreground shadow-lg shadow-orange-500/15 transition hover:bg-primary/90"
+              className="mt-6 font-normal"
             >
               Ask PawConnect
-              <span className="grid size-9 place-items-center rounded-full bg-white text-primary transition-transform group-hover:translate-x-0.5">
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </span>
-            </Link>
+            </CtaLink>
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
               {["Adoption", "Lost pets", "Vet care"].map((item) => (
                 <div
@@ -184,10 +181,12 @@ export default function Home() {
                   </p>
                   <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
                     {service.prompt}
-                    <ArrowRight
-                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    <span
+                      className="transition-transform group-hover:translate-x-0.5"
                       aria-hidden="true"
-                    />
+                    >
+                      →
+                    </span>
                   </p>
                 </Link>
               );
