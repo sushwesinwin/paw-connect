@@ -1,12 +1,11 @@
-"use server";
-
 import {
   createAdminSession,
   verifyAdminCredentials,
 } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 
-export async function loginAdmin(formData: FormData) {
+export async function POST(request: Request) {
+  const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 

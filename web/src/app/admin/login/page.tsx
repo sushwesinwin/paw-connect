@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft, PawPrint, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { loginAdmin } from "./actions";
 import { LoginErrorToast } from "./login-error-toast";
 
 export default function AdminLoginPage() {
@@ -14,8 +13,9 @@ export default function AdminLoginPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_15%,oklch(0.92_0.08_80),transparent_32%),linear-gradient(90deg,white,oklch(0.98_0.012_220)_45%,white)] px-3 py-4 text-foreground sm:px-4 sm:py-8">
       <form
-        action={loginAdmin}
+        action="/admin/login/submit"
         className="w-full max-w-md overflow-hidden rounded-3xl border bg-white/90 shadow-xl shadow-sky-950/10 backdrop-blur"
+        method="post"
       >
         <div className="flex items-center justify-between gap-2 border-b bg-card/70 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
           <Link href="/" className="flex min-w-0 items-center gap-2">

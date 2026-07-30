@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { logoutAdmin } from "./logout/actions";
 
 const sidebarItems = [
   { key: "adoption", label: "Adoption", icon: HeartHandshake },
@@ -203,7 +202,7 @@ export default async function AdminPage({
             >
               Back to app
             </Link>
-            <form action={logoutAdmin}>
+            <form action="/admin/logout" method="post">
               <button
                 className={cn(
                   buttonVariants({ variant: "destructive" }),

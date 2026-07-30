@@ -1,9 +1,7 @@
-"use server";
-
 import { clearAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 
-export async function logoutAdmin() {
+export async function POST() {
   await clearAdminSession();
   redirect("/admin/login");
 }
