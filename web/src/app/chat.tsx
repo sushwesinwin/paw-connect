@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Bot, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { gooeyToast } from "@/components/ui/goey-toaster";
 import { ChatCitation, sendChatMessage } from "@/lib/api";
 
 type Message = {
@@ -25,7 +26,6 @@ export function Chat() {
   const [sessionId, setSessionId] = useState<string>();
   const [messages, setMessages] = useState<Message[]>(starterMessages);
   const [input, setInput] = useState("");
-  const [error, setError] = useState("");
   const [isSending, setIsSending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,7 +44,6 @@ export function Chat() {
 
     setMessages((current) => [...current, userMessage]);
     setInput("");
-    setError("");
     setIsSending(true);
 
     try {
@@ -60,7 +59,9 @@ export function Chat() {
         },
       ]);
     } catch {
-      setError("Could not get an answer. Check that the API is running.");
+      gooeyToast.error("Could not get an answer", {
+        description: "Check that the API is running.",
+      });
     } finally {
       setIsSending(false);
     }
@@ -132,7 +133,6 @@ export function Chat() {
       </div>
 
       <form onSubmit={handleSubmit} className="border-t bg-white/95 p-3 md:p-4">
-        {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
         <div className="flex items-center gap-2 rounded-full border bg-background p-1.5">
           <input
             className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"

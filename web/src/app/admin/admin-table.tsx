@@ -559,7 +559,6 @@ function Field({
   const shared = {
     id: name,
     name,
-    required,
     value: form[name] ?? "",
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

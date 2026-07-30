@@ -2,14 +2,11 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, PawPrint, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { loginAdmin } from "./actions";
+import { LoginErrorToast } from "./login-error-toast";
 
-export default async function AdminLoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const params = await searchParams;
+export default function AdminLoginPage() {
   const showDemoCredentials = process.env.NODE_ENV !== "production";
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@pawconnect.local";
   const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
@@ -40,6 +37,9 @@ export default async function AdminLoginPage({
         </div>
 
         <div className="px-4 py-5 sm:px-5 sm:py-6">
+          <Suspense>
+            <LoginErrorToast />
+          </Suspense>
           <div className="mx-auto grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-orange-500/15 sm:size-14">
             <ShieldCheck className="size-6" aria-hidden="true" />
           </div>
@@ -73,21 +73,15 @@ export default async function AdminLoginPage({
             </div>
           ) : null}
 
-          {params.error ? (
-            <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              Invalid admin credentials.
-            </p>
-          ) : null}
-
           <div className="mt-5 grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Email
               <input
                 className={fieldClass}
+                inputMode="email"
                 name="email"
                 placeholder="admin@pawconnect.local"
-                required
-                type="email"
+                type="text"
               />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
@@ -96,7 +90,6 @@ export default async function AdminLoginPage({
                 className={fieldClass}
                 name="password"
                 placeholder="Enter password"
-                required
                 type="password"
               />
             </label>
