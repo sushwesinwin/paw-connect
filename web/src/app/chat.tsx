@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Bot, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gooeyToast } from "@/components/ui/goey-toaster";
@@ -68,7 +69,12 @@ export function Chat() {
   }
 
   return (
-    <section className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl border bg-white/90 shadow-xl shadow-sky-950/5 backdrop-blur md:min-h-[680px]">
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl border bg-white/90 shadow-xl shadow-sky-950/5 backdrop-blur md:min-h-[680px]"
+    >
       <div className="flex items-center justify-between gap-3 border-b bg-card/80 px-4 py-3 md:px-5 md:py-4">
         <div className="flex items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
@@ -89,46 +95,58 @@ export function Chat() {
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,white,oklch(0.98_0.012_220))] px-4 py-4 md:px-5 md:py-5">
-        {messages.map((message) => {
-          const isUser = message.role === "user";
+        <AnimatePresence initial={false}>
+          {messages.map((message) => {
+            const isUser = message.role === "user";
 
-          return (
-            <div
-              key={message.id}
-              className={`flex items-start gap-2 ${isUser ? "justify-end" : ""}`}
-            >
-              {!isUser ? (
-                <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                  <Bot className="size-4" aria-hidden="true" />
-                </span>
-              ) : null}
-              <article
-                className={`max-w-[calc(100%-2.5rem)] break-words rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm md:max-w-[82%] ${
-                  isUser
-                    ? "bg-primary text-primary-foreground"
-                    : "border bg-white text-foreground"
-                }`}
+            return (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`flex items-start gap-2 ${isUser ? "justify-end" : ""}`}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-                {message.citations?.length ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {message.citations.map((citation) => (
-                      <span
-                        key={`${citation.title}-${citation.category}`}
-                        className="rounded-md border bg-background px-2 py-1 text-xs text-muted-foreground"
-                      >
-                        {citation.title}
-                      </span>
-                    ))}
-                  </div>
+                {!isUser ? (
+                  <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                    <Bot className="size-4" aria-hidden="true" />
+                  </span>
                 ) : null}
-              </article>
-            </div>
-          );
-        })}
+                <article
+                  className={`max-w-[calc(100%-2.5rem)] break-words rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm md:max-w-[82%] ${
+                    isUser
+                      ? "bg-primary text-primary-foreground"
+                      : "border bg-white text-foreground"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  {message.citations?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {message.citations.map((citation) => (
+                        <span
+                          key={`${citation.title}-${citation.category}`}
+                          className="rounded-md border bg-background px-2 py-1 text-xs text-muted-foreground"
+                        >
+                          {citation.title}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
 
         {isSending ? (
-          <p className="text-sm text-zinc-500">Thinking...</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-sm text-zinc-500"
+          >
+            Thinking...
+          </motion.p>
         ) : null}
       </div>
 
@@ -152,6 +170,6 @@ export function Chat() {
           </Button>
         </div>
       </form>
-    </section>
+    </motion.section>
   );
 }
