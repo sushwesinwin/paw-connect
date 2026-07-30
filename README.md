@@ -285,6 +285,11 @@ Default development credentials:
 - Email: `admin@pawconnect.local`
 - Password: `admin123`
 
+Production credential placeholders:
+
+- Credential: `admin@example.com`
+- Password: `********`
+
 Change these values before deploying.
 
 ## Scripts
