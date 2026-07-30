@@ -1,4 +1,4 @@
-const CACHE_NAME = "pawconnect-v1";
+const CACHE_NAME = "pawconnect-v2";
 const APP_SHELL = ["/", "/assistant", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -19,15 +19,20 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+  const url = new URL(request.url);
 
-  if (request.method !== "GET") {
+  if (
+    request.method !== "GET" ||
+    url.origin !== self.location.origin ||
+    !APP_SHELL.includes(url.pathname)
+  ) {
     return;
   }
 
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response.ok && new URL(request.url).origin === self.location.origin) {
+        if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
