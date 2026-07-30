@@ -27,19 +27,10 @@ export async function sendChatMessage(input: {
   sessionId?: string;
   message: string;
 }) {
-  const response = await fetch(`${apiUrl}/chat`, {
+  return requestJson<ChatResponse>("/chat", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(input),
   });
-
-  if (!response.ok) {
-    throw new Error("Chat request failed");
-  }
-
-  return response.json() as Promise<ChatResponse>;
 }
 
 export type ListingType = "LOST" | "FOUND" | "ADOPTION";

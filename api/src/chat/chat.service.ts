@@ -331,8 +331,7 @@ export class ChatService {
         },
         body: JSON.stringify({
           model:
-            process.env.OPENROUTER_MODEL ??
-            'meta-llama/llama-3.1-8b-instruct:free',
+            process.env.OPENROUTER_MODEL ?? 'meta-llama/llama-3.1-8b-instruct',
           messages: [
             {
               role: 'system',

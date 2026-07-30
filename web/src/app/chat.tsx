@@ -59,9 +59,12 @@ export function Chat() {
           citations: response.citations,
         },
       ]);
-    } catch {
+    } catch (error) {
       gooeyToast.error("Could not get an answer", {
-        description: "Check that the API is running.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Check that the API is running.",
       });
     } finally {
       setIsSending(false);
