@@ -168,8 +168,24 @@ async function requestJson<T>(path: string, init: RequestInit) {
   });
 
   if (!response.ok) {
-    throw new Error("API request failed");
+    throw new Error(await getErrorMessage(response));
   }
 
   return response.json() as Promise<T>;
+}
+
+async function getErrorMessage(response: Response) {
+  const fallback = `API request failed (${response.status})`;
+
+  try {
+    const body = (await response.json()) as { message?: string | string[] };
+
+    if (Array.isArray(body.message)) {
+      return body.message.join(", ");
+    }
+
+    return body.message ?? fallback;
+  } catch {
+    return fallback;
+  }
 }

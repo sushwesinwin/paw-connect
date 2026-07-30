@@ -148,8 +148,8 @@ export function AdminTable({
 
       setModal(null);
       startTransition(() => router.refresh());
-    } catch {
-      setError("Could not save. Check required fields and try again.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not save.");
     } finally {
       setSaving(false);
     }
@@ -169,8 +169,8 @@ export function AdminTable({
         await deleteListing(row.id);
       }
       startTransition(() => router.refresh());
-    } catch {
-      setError("Could not delete this record. Try again.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not delete.");
     } finally {
       setSaving(false);
     }
@@ -262,7 +262,7 @@ export function AdminTable({
                             }}
                           >
                             <Pencil className="size-4" aria-hidden="true" />
-                            Edit details
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10"
