@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ServiceType } from '@prisma/client';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { AppointmentStatus, ServiceType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 type CreateAppointmentInput = {
@@ -12,6 +16,10 @@ type CreateAppointmentInput = {
   contactEmail?: string;
   notes?: string;
 };
+
+type UpdateAppointmentInput = Partial<
+  CreateAppointmentInput & { status: AppointmentStatus }
+>;
 
 @Injectable()
 export class AppointmentsService {
@@ -55,14 +63,81 @@ export class AppointmentsService {
       },
     });
   }
+
+  async update(id: string, input: UpdateAppointmentInput) {
+    const existing = await this.prisma.appointmentRequest.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    const next = { ...existing, ...input };
+
+    if (
+      input.serviceType &&
+      !Object.values(ServiceType).includes(input.serviceType)
+    ) {
+      throw new BadRequestException('Invalid service type');
+    }
+
+    if (
+      input.status &&
+      !Object.values(AppointmentStatus).includes(input.status)
+    ) {
+      throw new BadRequestException('Invalid appointment status');
+    }
+
+    requireText(next.petName, 'petName');
+    requireText(next.petType, 'petType');
+    requireText(String(next.preferredAt), 'preferredAt');
+    requireText(next.contactName, 'contactName');
+
+    if (!next.contactPhone?.trim() && !next.contactEmail?.trim()) {
+      throw new BadRequestException('contactPhone or contactEmail is required');
+    }
+
+    const preferredAt = new Date(next.preferredAt);
+    if (Number.isNaN(preferredAt.getTime())) {
+      throw new BadRequestException('preferredAt must be a valid date');
+    }
+
+    return this.prisma.appointmentRequest.update({
+      where: { id },
+      data: {
+        serviceType: next.serviceType,
+        petName: next.petName.trim(),
+        petType: next.petType.trim(),
+        preferredAt,
+        contactName: next.contactName.trim(),
+        contactPhone: clean(next.contactPhone),
+        contactEmail: clean(next.contactEmail),
+        notes: clean(next.notes),
+        status: next.status,
+      },
+    });
+  }
+
+  async remove(id: string) {
+    const existing = await this.prisma.appointmentRequest.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    return this.prisma.appointmentRequest.delete({ where: { id } });
+  }
 }
 
-function requireText(value: string | undefined, field: string) {
+function requireText(value: string | null | undefined, field: string) {
   if (!value?.trim()) {
     throw new BadRequestException(`${field} is required`);
   }
 }
 
-function clean(value: string | undefined) {
+function clean(value: string | null | undefined) {
   return value?.trim() || undefined;
 }

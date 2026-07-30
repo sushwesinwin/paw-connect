@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, PawPrint, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ const navItems = [
   { label: "How it works", href: "#how-it-works" },
   { label: "Services", href: "#services" },
   { label: "Features", href: "#features" },
+  { label: "Admin", href: "/admin" },
 ];
 
 export function AppNav() {
@@ -84,7 +86,7 @@ export function AppNav() {
         >
           {navItems.map((item) => {
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -94,7 +96,7 @@ export function AppNav() {
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </nav>

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ListingType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -16,6 +20,8 @@ type CreateListingInput = {
   imageUrl?: string;
 };
 
+type UpdateListingInput = Partial<CreateListingInput>;
+
 @Injectable()
 export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -31,7 +37,10 @@ export class ListingsService {
     }
 
     if (filters.location?.trim()) {
-      where.location = { contains: filters.location.trim(), mode: 'insensitive' };
+      where.location = {
+        contains: filters.location.trim(),
+        mode: 'insensitive',
+      };
     }
 
     if (filters.q?.trim()) {
@@ -81,14 +90,64 @@ export class ListingsService {
       },
     });
   }
+
+  async update(id: string, input: UpdateListingInput) {
+    const existing = await this.prisma.petListing.findUnique({ where: { id } });
+
+    if (!existing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    const next = { ...existing, ...input };
+
+    if (input.type && !Object.values(ListingType).includes(input.type)) {
+      throw new BadRequestException('Invalid listing type');
+    }
+
+    requireText(next.petType, 'petType');
+    requireText(next.location, 'location');
+    requireText(next.description, 'description');
+    requireText(next.contactName, 'contactName');
+
+    if (!next.contactPhone?.trim() && !next.contactEmail?.trim()) {
+      throw new BadRequestException('contactPhone or contactEmail is required');
+    }
+
+    return this.prisma.petListing.update({
+      where: { id },
+      data: {
+        type: next.type,
+        petName: clean(next.petName),
+        petType: next.petType.trim(),
+        breed: clean(next.breed),
+        age: clean(next.age),
+        location: next.location.trim(),
+        description: next.description.trim(),
+        contactName: next.contactName.trim(),
+        contactPhone: clean(next.contactPhone),
+        contactEmail: clean(next.contactEmail),
+        imageUrl: clean(next.imageUrl),
+      },
+    });
+  }
+
+  async remove(id: string) {
+    const existing = await this.prisma.petListing.findUnique({ where: { id } });
+
+    if (!existing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    return this.prisma.petListing.delete({ where: { id } });
+  }
 }
 
-function requireText(value: string | undefined, field: string) {
+function requireText(value: string | null | undefined, field: string) {
   if (!value?.trim()) {
     throw new BadRequestException(`${field} is required`);
   }
 }
 
-function clean(value: string | undefined) {
+function clean(value: string | null | undefined) {
   return value?.trim() || undefined;
 }
