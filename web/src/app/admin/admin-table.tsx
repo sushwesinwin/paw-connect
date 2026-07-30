@@ -30,19 +30,23 @@ import {
   AppointmentRequest,
   createAppointment,
   createListing,
+  createStaff,
   deleteAppointment,
   deleteListing,
+  deleteStaff,
   ListingType,
   PetListing,
   PetListingInput,
+  StaffInput,
+  StaffMember,
   updateAppointment,
   updateListing,
+  updateStaff,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   Check,
   ChevronDown,
-  Download,
   Pencil,
   Plus,
   Search,
@@ -53,7 +57,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, MouseEvent, useMemo, useState, useTransition } from "react";
 import { z } from "zod";
 
-type SectionKey = "adoption" | "lost-found" | "vet-grooming";
+type SectionKey = "adoption" | "lost-found" | "vet-grooming" | "staff";
 
 type AdminTableProps = {
   section: SectionKey;
@@ -61,6 +65,7 @@ type AdminTableProps = {
   columns: string[];
   listings: PetListing[];
   appointments: AppointmentRequest[];
+  staff: StaffMember[];
 };
 
 type FormState = Record<string, string>;
@@ -103,12 +108,23 @@ const appointmentSchema = z
     path: ["contactEmail"],
   });
 
+const staffSchema = z.object({
+  name: z.string().trim().min(1, "Staff name is required"),
+  role: z.enum(["VET", "GROOMER"]),
+  specialty: z.string().trim().min(1, "Specialty is required"),
+  availableDays: z.array(z.string()).min(1, "Available days are required"),
+  startTime: z.string().trim().min(1, "Start time is required"),
+  endTime: z.string().trim().min(1, "End time is required"),
+  status: z.enum(["AVAILABLE", "BUSY", "OFF_DUTY", "ON_LEAVE"]).optional(),
+});
+
 export function AdminTable({
   section,
   title,
   columns,
   listings,
   appointments,
+  staff,
 }: AdminTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -117,8 +133,8 @@ export function AdminTable({
   const [modal, setModal] = useState<ModalState>(null);
   const [saving, setSaving] = useState(false);
   const rows = useMemo(
-    () => getRows(section, listings, appointments),
-    [section, listings, appointments],
+    () => getRows(section, listings, appointments, staff),
+    [section, listings, appointments, staff],
   );
   const statusOptions = useMemo(
     () => [...new Set(rows.map((row) => row.status))],
@@ -138,7 +154,9 @@ export function AdminTable({
     setModal({
       mode: "add",
       form:
-        section === "vet-grooming"
+        section === "staff"
+          ? defaultStaffForm()
+          : section === "vet-grooming"
           ? defaultAppointmentForm()
           : defaultListingForm(section),
     });
@@ -149,7 +167,9 @@ export function AdminTable({
       mode: "edit",
       id: row.id,
       form:
-        row.kind === "appointment"
+        row.kind === "staff"
+          ? staffToForm(row.record)
+          : row.kind === "appointment"
           ? appointmentToForm(row.record)
           : listingToForm(row.record),
     });
@@ -164,7 +184,14 @@ export function AdminTable({
 
     try {
       setSaving(true);
-      if (section === "vet-grooming") {
+      if (section === "staff") {
+        const payload = staffPayload(modal.form);
+        if (modal.mode === "edit" && modal.id) {
+          await updateStaff(modal.id, payload);
+        } else {
+          await createStaff(payload);
+        }
+      } else if (section === "vet-grooming") {
         const payload = appointmentPayload(modal.form);
         if (modal.mode === "edit" && modal.id) {
           await updateAppointment(modal.id, payload);
@@ -197,7 +224,9 @@ export function AdminTable({
 
     try {
       setSaving(true);
-      if (row.kind === "appointment") {
+      if (row.kind === "staff") {
+        await deleteStaff(row.id);
+      } else if (row.kind === "appointment") {
         await deleteAppointment(row.id);
       } else {
         await deleteListing(row.id);
@@ -222,10 +251,6 @@ export function AdminTable({
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className={controlClass} type="button">
-              <Download className="size-4" aria-hidden="true" />
-              Export
-            </button>
             <button
               className={cn(buttonVariants(), "h-9 rounded-full px-4")}
               type="button"
@@ -337,7 +362,12 @@ export function AdminTable({
             </div>
 
             <div className="mt-5 grid gap-4">
-              {section === "vet-grooming" ? (
+              {section === "staff" ? (
+                <StaffFields
+                  form={modal.form}
+                  setForm={(form) => setModal({ ...modal, form })}
+                />
+              ) : section === "vet-grooming" ? (
                 <AppointmentFields
                   form={modal.form}
                   setForm={(form) => setModal({ ...modal, form })}
@@ -456,6 +486,58 @@ function AppointmentFields({
   );
 }
 
+function StaffFields({
+  form,
+  setForm,
+}: {
+  form: FormState;
+  setForm: (form: FormState) => void;
+}) {
+  return (
+    <>
+      <ChoiceGroup
+        label="Role"
+        value={form.role}
+        options={["VET", "GROOMER"]}
+        onChange={(role) => setForm({ ...form, role })}
+      />
+      <ChoiceGroup
+        label="Status"
+        value={form.status}
+        options={["AVAILABLE", "BUSY", "OFF_DUTY", "ON_LEAVE"]}
+        onChange={(status) => setForm({ ...form, status })}
+      />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Staff name" name="name" required form={form} setForm={setForm} />
+        <Field label="Specialty" name="specialty" required form={form} setForm={setForm} />
+        <Field
+          label="Available days"
+          name="availableDays"
+          required
+          form={form}
+          setForm={setForm}
+        />
+        <Field
+          label="Start time"
+          name="startTime"
+          type="time"
+          required
+          form={form}
+          setForm={setForm}
+        />
+        <Field
+          label="End time"
+          name="endTime"
+          type="time"
+          required
+          form={form}
+          setForm={setForm}
+        />
+      </div>
+    </>
+  );
+}
+
 function Field({
   label,
   name,
@@ -473,7 +555,7 @@ function Field({
   required?: boolean;
   multiline?: boolean;
 }) {
-  const shouldCapitalize = ["petName", "contactName"].includes(name);
+  const shouldCapitalize = ["petName", "contactName", "name"].includes(name);
   const shared = {
     id: name,
     name,
@@ -549,6 +631,7 @@ function ChoiceGroup({
 
 type AdminRow =
   | { id: string; kind: "listing"; status: string; cells: string[]; record: PetListing }
+  | { id: string; kind: "staff"; status: string; cells: string[]; record: StaffMember }
   | {
       id: string;
       kind: "appointment";
@@ -561,6 +644,7 @@ function getRows(
   section: SectionKey,
   listings: PetListing[],
   appointments: AppointmentRequest[],
+  staff: StaffMember[],
 ): AdminRow[] {
   if (section === "adoption") {
     return listings.map((listing) => ({
@@ -580,6 +664,20 @@ function getRows(
       cells: lostFoundRow(listing),
       record: listing,
     }));
+  }
+
+  if (section === "staff") {
+    return staff.map((member) => {
+      const status = titleCase(member.status);
+
+      return {
+        id: member.id,
+        kind: "staff",
+        status,
+        cells: staffRow(member),
+        record: member,
+      };
+    });
   }
 
   return appointments.map((appointment) => {
@@ -740,6 +838,45 @@ function appointmentPayload(form: FormState): AppointmentInput {
   }) as AppointmentInput;
 }
 
+function defaultStaffForm(): FormState {
+  return {
+    name: "",
+    role: "VET",
+    specialty: "",
+    availableDays: "Monday, Tuesday",
+    startTime: "09:00",
+    endTime: "17:00",
+    status: "AVAILABLE",
+  };
+}
+
+function staffToForm(member: StaffMember): FormState {
+  return {
+    name: capitalizeNameInput(member.name),
+    role: member.role,
+    specialty: member.specialty,
+    availableDays: member.availableDays.join(", "),
+    startTime: member.startTime,
+    endTime: member.endTime,
+    status: member.status,
+  };
+}
+
+function staffPayload(form: FormState): StaffInput {
+  return staffSchema.parse({
+    name: capitalizeWords(form.name),
+    role: form.role,
+    specialty: form.specialty,
+    availableDays: form.availableDays
+      .split(",")
+      .map((day) => capitalizeWords(day))
+      .filter(Boolean),
+    startTime: form.startTime,
+    endTime: form.endTime,
+    status: form.status,
+  }) as StaffInput;
+}
+
 function showToastError(error: unknown, title: string) {
   if (error instanceof z.ZodError) {
     gooeyToast.error(title, {
@@ -823,6 +960,17 @@ function appointmentRow(appointment: AppointmentRequest) {
   ];
 }
 
+function staffRow(member: StaffMember) {
+  return [
+    capitalizeWords(member.name),
+    titleCase(member.role),
+    member.specialty,
+    member.availableDays.join(", "),
+    `${member.startTime} - ${member.endTime}`,
+    titleCase(member.status),
+  ];
+}
+
 function statusDotClass(status: string) {
   if (["Active", "Completed"].includes(status)) {
     return "bg-emerald-500";
@@ -869,7 +1017,5 @@ function titleCase(value: string) {
     .join(" ");
 }
 
-const controlClass =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-full border bg-white px-3 text-sm hover:bg-muted";
 const rowActionClass =
   "inline-grid size-8 place-items-center rounded-full border bg-white transition hover:bg-muted disabled:pointer-events-none disabled:opacity-50";

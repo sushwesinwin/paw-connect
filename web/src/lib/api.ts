@@ -98,6 +98,31 @@ export type AppointmentInput = {
   status?: AppointmentRequest["status"];
 };
 
+export type StaffRole = "VET" | "GROOMER";
+export type StaffStatus = "AVAILABLE" | "BUSY" | "OFF_DUTY" | "ON_LEAVE";
+
+export type StaffMember = {
+  id: string;
+  name: string;
+  role: StaffRole;
+  specialty: string;
+  availableDays: string[];
+  startTime: string;
+  endTime: string;
+  status: StaffStatus;
+  createdAt: string;
+};
+
+export type StaffInput = {
+  name: string;
+  role: StaffRole;
+  specialty: string;
+  availableDays: string[];
+  startTime: string;
+  endTime: string;
+  status?: StaffStatus;
+};
+
 export async function getListings() {
   const response = await fetch(`${apiUrl}/listings`, { cache: "no-store" });
 
@@ -116,6 +141,16 @@ export async function getAppointments() {
   }
 
   return response.json() as Promise<AppointmentRequest[]>;
+}
+
+export async function getStaff() {
+  const response = await fetch(`${apiUrl}/staff`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Staff request failed");
+  }
+
+  return response.json() as Promise<StaffMember[]>;
 }
 
 export function createListing(input: PetListingInput) {
@@ -154,6 +189,26 @@ export function updateAppointment(id: string, input: Partial<AppointmentInput>) 
 
 export function deleteAppointment(id: string) {
   return requestJson<AppointmentRequest>(`/appointments/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export function createStaff(input: StaffInput) {
+  return requestJson<StaffMember>("/staff", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateStaff(id: string, input: Partial<StaffInput>) {
+  return requestJson<StaffMember>(`/staff/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteStaff(id: string) {
+  return requestJson<StaffMember>(`/staff/${id}`, {
     method: "DELETE",
   });
 }

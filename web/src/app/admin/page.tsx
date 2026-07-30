@@ -11,7 +11,9 @@ import {
   AppointmentRequest,
   getAppointments,
   getListings,
+  getStaff,
   PetListing,
+  StaffMember,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
@@ -20,6 +22,7 @@ import {
   LogOut,
   PawPrint,
   Search,
+  Stethoscope,
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -29,6 +32,7 @@ const sidebarItems = [
   { key: "adoption", label: "Adoption", icon: HeartHandshake },
   { key: "lost-found", label: "Lost & Found", icon: Search },
   { key: "vet-grooming", label: "Vet & Grooming", icon: CalendarDays },
+  { key: "staff", label: "Staff", icon: Stethoscope },
 ];
 
 const tableConfig = {
@@ -61,6 +65,17 @@ const tableConfig = {
       "Status",
     ],
   },
+  staff: {
+    title: "Vet & Grooming Staff",
+    columns: [
+      "Staff Name",
+      "Role",
+      "Specialty",
+      "Available Days",
+      "Time",
+      "Status",
+    ],
+  },
 };
 
 type SectionKey = keyof typeof tableConfig;
@@ -78,11 +93,13 @@ export default async function AdminPage({
   const activeKey = isSectionKey(params.section) ? params.section : "adoption";
   let listings: PetListing[] = [];
   let appointments: AppointmentRequest[] = [];
+  let staff: StaffMember[] = [];
 
   try {
-    [listings, appointments] = await Promise.all([
+    [listings, appointments, staff] = await Promise.all([
       getListings(),
       getAppointments(),
+      getStaff(),
     ]);
   } catch {
     // Keep the dashboard renderable when the API is offline.
@@ -100,20 +117,26 @@ export default async function AdminPage({
         String(appointments.filter((item) => item.serviceType === "GROOMING").length),
       ],
     ],
+    staff: [
+      ["Available Staff", String(staff.filter((item) => item.status === "AVAILABLE").length)],
+      ["Total Staff", String(staff.length)],
+    ],
   };
   const activeTable = tableConfig[activeKey];
   const activeSummary = summaryBySection[activeKey];
   const activeListings =
-    activeKey === "vet-grooming"
+    activeKey === "vet-grooming" || activeKey === "staff"
       ? []
       : activeKey === "adoption"
         ? adoptionListings
         : lostFoundListings;
   const activeAppointments = activeKey === "vet-grooming" ? appointments : [];
+  const activeStaff = activeKey === "staff" ? staff : [];
   const counts: Record<SectionKey, number> = {
     adoption: adoptionListings.length,
     "lost-found": lostFoundListings.length,
     "vet-grooming": appointments.length,
+    staff: staff.length,
   };
 
   return (
@@ -221,6 +244,7 @@ export default async function AdminPage({
             columns={activeTable.columns}
             listings={activeListings}
             appointments={activeAppointments}
+            staff={activeStaff}
           />
         </section>
       </div>
