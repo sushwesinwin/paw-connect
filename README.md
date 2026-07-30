@@ -125,6 +125,31 @@ Normal application code is used where correctness and control matter:
 
 This prevents important operations from depending entirely on free-form model output.
 
+## AI Development Workflow
+
+This project was built with AI as an engineering collaborator, not as a replacement for system design. I used Codex-style development loops to move quickly while keeping ownership of the product decisions, code review, and final behavior.
+
+How I leveraged AI during development:
+
+- Defined the product direction, user flows, data model, and acceptance criteria
+- Set clear implementation constraints for the AI agent, including reusable UI, shadcn-style components, toast-based feedback, mobile-first admin views, and minimal dependency additions
+- Iterated through UI feedback with screenshots, asking the agent to refine layout, spacing, mobile behavior, footer design, CTA design, and lost-and-found interactions
+- Used AI to inspect the codebase, locate the right files, make scoped edits, and run lint/build checks after changes
+- Treated AI output as a draft implementation that still needed verification, simplification, and alignment with the existing project structure
+
+The most useful pattern was giving the agent narrow, concrete instructions and then correcting the result through fast feedback. For example, the lost-and-found flow evolved from a grid section into a social-style feed with image uploads, admin visibility, mobile previews, share-only post actions, and toast-based error handling.
+
+I also used skills and operating preferences to make the agent more effective:
+
+- Prefer existing project patterns over new abstractions
+- Use reusable UI components where available
+- Keep changes small and reversible
+- Validate with build and lint commands
+- Avoid inline validation messages when toast feedback is the intended UX
+- Optimize mobile screens as a first-class experience, especially the admin dashboard
+
+This workflow made the AI useful for execution speed while I stayed responsible for the architecture, trade-offs, and final product quality.
+
 ## Retrieval-Augmented Generation
 
 PawConnect uses a lightweight RAG flow for general pet-care answers.
