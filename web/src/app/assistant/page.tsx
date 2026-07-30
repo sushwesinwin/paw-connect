@@ -1,4 +1,5 @@
 import { Chat } from "../chat";
+import { Footer } from "../footer";
 import { AppNav } from "../nav";
 
 export default function AssistantPage() {
@@ -17,6 +18,7 @@ export default function AssistantPage() {
         </div>
         <Chat />
       </section>
+      <Footer />
     </main>
   );
 }
