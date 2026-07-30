@@ -56,6 +56,7 @@ export type PetListing = {
   contactName: string;
   contactPhone?: string;
   contactEmail?: string;
+  imageUrl?: string;
   createdAt: string;
 };
 
@@ -70,6 +71,7 @@ export type PetListingInput = {
   contactName: string;
   contactPhone?: string;
   contactEmail?: string;
+  imageUrl?: string;
 };
 
 export type AppointmentRequest = {

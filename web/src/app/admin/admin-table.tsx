@@ -44,6 +44,7 @@ import {
   updateStaff,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import {
   Check,
   ChevronDown,
@@ -83,6 +84,7 @@ const listingSchema = z
     contactName: z.string().trim().min(1, "Owner / reporter is required"),
     contactPhone: z.string().optional(),
     contactEmail: z.string().email("Enter a valid email").optional(),
+    imageUrl: z.string().trim().min(1, "Image is required"),
   })
   .refine((value) => value.contactPhone || value.contactEmail, {
     message: "Phone or email is required",
@@ -288,6 +290,18 @@ export function AdminTable({
                 key={row.id}
                 className="rounded-2xl border bg-white p-3 shadow-sm"
               >
+                {row.kind === "listing" && row.record.imageUrl ? (
+                  <div className="relative mb-3 aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+                    <Image
+                      src={row.record.imageUrl}
+                      alt={row.record.petName ?? `${row.record.type.toLowerCase()} pet`}
+                      fill
+                      sizes="100vw"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-heading text-base font-medium">
@@ -351,6 +365,9 @@ export function AdminTable({
             <Table className="min-w-[920px] whitespace-nowrap md:min-w-[1040px]">
               <TableHeader>
                 <TableRow>
+                  {section === "adoption" || section === "lost-found" ? (
+                    <TableHead className="w-[88px]">Image</TableHead>
+                  ) : null}
                   {columns.map((column) => (
                     <TableHead key={column}>{column}</TableHead>
                   ))}
@@ -360,6 +377,24 @@ export function AdminTable({
               <TableBody>
                 {visibleRows.map((row) => (
                   <TableRow key={row.id}>
+                    {row.kind === "listing" ? (
+                      <TableCell className="w-[88px]">
+                        {row.record.imageUrl ? (
+                          <div className="relative h-14 w-20 overflow-hidden rounded-xl bg-muted">
+                            <Image
+                              src={row.record.imageUrl}
+                              alt={row.record.petName ?? `${row.record.type.toLowerCase()} pet`}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    ) : null}
                     {row.cells.map((value, index) => (
                       <TableCell key={`${row.id}-${columns[index]}`}>
                         {columns[index] === "Status" ? (
@@ -538,6 +573,9 @@ function ListingFields({
         <Field label="Phone" name="contactPhone" form={form} setForm={setForm} />
         <Field label="Email" name="contactEmail" type="email" form={form} setForm={setForm} />
       </div>
+      {section === "lost-found" ? (
+        <ImageField form={form} setForm={setForm} />
+      ) : null}
       <Field
         label="Description"
         name="description"
@@ -547,6 +585,75 @@ function ListingFields({
         setForm={setForm}
       />
     </>
+  );
+}
+
+function ImageField({
+  form,
+  setForm,
+}: {
+  form: FormState;
+  setForm: (form: FormState) => void;
+}) {
+  function uploadImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      gooeyToast.error("Upload an image file");
+      return;
+    }
+
+    if (file.size > 750_000) {
+      gooeyToast.error("Image is too large", {
+        description: "Use an image under 750 KB.",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm({ ...form, imageUrl: String(reader.result) });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  return (
+    <div className="grid gap-2 text-sm font-medium">
+      <span>Pet image</span>
+      {form.imageUrl ? (
+        <div className="relative h-44 overflow-hidden rounded-2xl border bg-white">
+          <Image
+            src={form.imageUrl}
+            alt="Lost or found pet preview"
+            fill
+            sizes="(min-width: 768px) 640px, 100vw"
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          accept="image/*"
+          className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm font-normal file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+          type="file"
+          onChange={uploadImage}
+        />
+        {form.imageUrl ? (
+          <button
+            className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full px-4")}
+            type="button"
+            onClick={() => setForm({ ...form, imageUrl: "" })}
+          >
+            Clear
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -867,6 +974,7 @@ function defaultListingForm(section: SectionKey): FormState {
     contactName: "",
     contactPhone: "",
     contactEmail: "",
+    imageUrl: "",
   };
 }
 
@@ -882,6 +990,7 @@ function listingToForm(listing: PetListing): FormState {
     contactName: capitalizeNameInput(listing.contactName),
     contactPhone: listing.contactPhone ?? "",
     contactEmail: listing.contactEmail ?? "",
+    imageUrl: listing.imageUrl ?? "",
   };
 }
 
@@ -897,6 +1006,7 @@ function listingPayload(section: SectionKey, form: FormState): PetListingInput {
     contactName: capitalizeWords(form.contactName),
     contactPhone: optional(form.contactPhone),
     contactEmail: optional(form.contactEmail),
+    imageUrl: optional(form.imageUrl),
   }) as PetListingInput;
 }
 

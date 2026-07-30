@@ -6,8 +6,11 @@ import {
   Search,
 } from "lucide-react";
 import { CtaLink } from "@/components/ui/cta-link";
+import { getLostFoundPosts } from "@/lib/lost-found";
 import Link from "next/link";
 import { Footer } from "./footer";
+import { LostFoundComposer } from "./lost-found-composer";
+import { LostFoundFeed } from "./lost-found-feed";
 import { AppNav } from "./nav";
 
 const services = [
@@ -46,7 +49,9 @@ const howItWorks = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const lostFoundPosts = (await getLostFoundPosts()).slice(0, 2);
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_78%_12%,oklch(0.9_0.08_210),transparent_32%),radial-gradient(circle_at_12%_36%,oklch(0.95_0.07_80),transparent_28%),linear-gradient(90deg,white,oklch(0.98_0.012_220)_45%,white)] text-foreground">
       <AppNav />
@@ -191,6 +196,28 @@ export default function Home() {
                 </Link>
               );
             })}
+          </div>
+        </section>
+        <section
+          id="lost-found"
+          className="scroll-mt-28 rounded-3xl border bg-white/80 p-4 shadow-xl shadow-sky-950/5 md:p-6"
+        >
+          <div className="mx-auto mb-5 flex max-w-xl flex-col gap-4 text-center">
+            <p className="text-sm font-medium text-primary">Lost & found</p>
+            <h2 className="font-heading text-2xl font-normal leading-tight md:text-3xl">
+              Recently posted pets.
+            </h2>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Scroll community reports, then create a post with a photo and last
+              seen location.
+            </p>
+            <div className="flex justify-center">
+            <LostFoundComposer />
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-xl rounded-3xl bg-muted/40 p-2">
+            <LostFoundFeed posts={lostFoundPosts} />
           </div>
         </section>
       </section>
