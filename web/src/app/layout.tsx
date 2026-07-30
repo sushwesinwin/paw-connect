@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Albert_Sans, Geist, Geist_Mono } from "next/font/google";
+import { GooeyToaster } from "@/components/ui/goey-toaster";
 import "./globals.css";
+import "goey-toast/styles.css";
 
 const albertSans = Albert_Sans({
   variable: "--font-albert-sans",
@@ -32,7 +34,10 @@ export default function RootLayout({
       lang="en"
       className={`${albertSans.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <GooeyToaster position="bottom-right" />
+      </body>
     </html>
   );
 }

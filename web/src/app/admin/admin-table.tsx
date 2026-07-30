@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { gooeyToast } from "@/components/ui/goey-toaster";
 import {
   Card,
   CardContent,
@@ -51,6 +52,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, MouseEvent, useMemo, useState, useTransition } from "react";
+import { z } from "zod";
 
 type SectionKey = "adoption" | "lost-found" | "vet-grooming";
 
@@ -65,6 +67,43 @@ type AdminTableProps = {
 type FormState = Record<string, string>;
 type ModalState = { mode: "add" | "edit"; id?: string; form: FormState } | null;
 
+const listingSchema = z
+  .object({
+    type: z.enum(["LOST", "FOUND", "ADOPTION"]),
+    petName: z.string().optional(),
+    petType: z.string().trim().min(1, "Species is required"),
+    breed: z.string().optional(),
+    age: z.string().optional(),
+    location: z.string().trim().min(1, "Location is required"),
+    description: z.string().trim().min(1, "Description is required"),
+    contactName: z.string().trim().min(1, "Owner / reporter is required"),
+    contactPhone: z.string().optional(),
+    contactEmail: z.string().email("Enter a valid email").optional(),
+  })
+  .refine((value) => value.contactPhone || value.contactEmail, {
+    message: "Phone or email is required",
+    path: ["contactEmail"],
+  });
+
+const appointmentSchema = z
+  .object({
+    serviceType: z.enum(["VET", "GROOMING"]),
+    petName: z.string().trim().min(1, "Pet name is required"),
+    petType: z.string().trim().min(1, "Species is required"),
+    preferredAt: z.string().refine((value) => !Number.isNaN(new Date(value).getTime()), {
+      message: "Preferred date and time is required",
+    }),
+    contactName: z.string().trim().min(1, "Customer is required"),
+    contactPhone: z.string().optional(),
+    contactEmail: z.string().email("Enter a valid email").optional(),
+    notes: z.string().optional(),
+    status: z.enum(["PENDING", "CONFIRMED", "CANCELLED"]).optional(),
+  })
+  .refine((value) => value.contactPhone || value.contactEmail, {
+    message: "Phone or email is required",
+    path: ["contactEmail"],
+  });
+
 export function AdminTable({
   section,
   title,
@@ -77,7 +116,6 @@ export function AdminTable({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [modal, setModal] = useState<ModalState>(null);
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const rows = useMemo(
     () => getRows(section, listings, appointments),
@@ -98,7 +136,6 @@ export function AdminTable({
   });
 
   function openAdd() {
-    setError("");
     setModal({
       mode: "add",
       form:
@@ -109,7 +146,6 @@ export function AdminTable({
   }
 
   function openEdit(row: AdminRow) {
-    setError("");
     setModal({
       mode: "edit",
       id: row.id,
@@ -128,7 +164,6 @@ export function AdminTable({
     }
 
     try {
-      setError("");
       setSaving(true);
       if (section === "vet-grooming") {
         const payload = appointmentPayload(modal.form);
@@ -147,9 +182,10 @@ export function AdminTable({
       }
 
       setModal(null);
+      gooeyToast.success(modal.mode === "edit" ? "Changes saved" : "Record added");
       startTransition(() => router.refresh());
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not save.");
+      showToastError(error, "Could not save");
     } finally {
       setSaving(false);
     }
@@ -161,16 +197,16 @@ export function AdminTable({
     }
 
     try {
-      setError("");
       setSaving(true);
       if (row.kind === "appointment") {
         await deleteAppointment(row.id);
       } else {
         await deleteListing(row.id);
       }
+      gooeyToast.success("Record deleted");
       startTransition(() => router.refresh());
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not delete.");
+      showToastError(error, "Could not delete");
     } finally {
       setSaving(false);
     }
@@ -219,9 +255,6 @@ export function AdminTable({
               onChange={setStatus}
             />
           </div>
-          {!modal && error ? (
-            <p className="mt-3 text-sm text-destructive">{error}</p>
-          ) : null}
 
           <div className="mt-4 overflow-x-auto">
             <Table>
@@ -329,8 +362,6 @@ export function AdminTable({
                 />
               )}
             </div>
-
-            {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
 
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -662,7 +693,7 @@ function listingToForm(listing: PetListing): FormState {
 }
 
 function listingPayload(section: SectionKey, form: FormState): PetListingInput {
-  return {
+  return listingSchema.parse({
     type: (section === "adoption" ? "ADOPTION" : form.type) as ListingType,
     petName: optionalName(form.petName),
     petType: form.petType,
@@ -673,7 +704,7 @@ function listingPayload(section: SectionKey, form: FormState): PetListingInput {
     contactName: capitalizeWords(form.contactName),
     contactPhone: optional(form.contactPhone),
     contactEmail: optional(form.contactEmail),
-  };
+  }) as PetListingInput;
 }
 
 function defaultAppointmentForm(): FormState {
@@ -705,17 +736,30 @@ function appointmentToForm(appointment: AppointmentRequest): FormState {
 }
 
 function appointmentPayload(form: FormState): AppointmentInput {
-  return {
+  return appointmentSchema.parse({
     serviceType: form.serviceType as AppointmentInput["serviceType"],
     petName: capitalizeWords(form.petName),
     petType: form.petType,
-    preferredAt: new Date(form.preferredAt).toISOString(),
+    preferredAt: toIsoDate(form.preferredAt),
     contactName: capitalizeWords(form.contactName),
     contactPhone: optional(form.contactPhone),
     contactEmail: optional(form.contactEmail),
     notes: optional(form.notes),
     status: form.status as AppointmentInput["status"],
-  };
+  }) as AppointmentInput;
+}
+
+function showToastError(error: unknown, title: string) {
+  if (error instanceof z.ZodError) {
+    gooeyToast.error(title, {
+      description: error.issues[0]?.message ?? "Check required fields and try again.",
+    });
+    return;
+  }
+
+  gooeyToast.error(title, {
+    description: error instanceof Error ? error.message : "Try again.",
+  });
 }
 
 function optional(value: string) {
@@ -742,6 +786,12 @@ function toDateTimeInput(value: string) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
 
   return local.toISOString().slice(0, 16);
+}
+
+function toIsoDate(value: string) {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
 }
 
 function adoptionRow(listing: PetListing) {
