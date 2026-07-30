@@ -75,26 +75,12 @@ export default async function Home() {
               AI answers grounded in product tips, vet guidance, grooming notes,
               adoption advice, and lost pet help.
             </p>
-            <CtaLink
-              href="/assistant"
-              className="mt-6 font-normal"
-            >
-              Ask PawConnect
-            </CtaLink>
-            <PwaInstallCard />
-            <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
-              {["Adoption", "Lost pets", "Vet care"].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-2xl border bg-white/75 px-4 py-3 text-sm font-medium shadow-sm shadow-sky-950/5"
-                >
-                  {item}
-                  <p className="mt-1 text-xs font-normal text-muted-foreground">
-                    Help from chat
-                  </p>
-                </div>
-              ))}
+            <div className="mt-6 flex justify-center md:justify-start">
+              <CtaLink href="/assistant" className="font-normal">
+                Ask PawConnect
+              </CtaLink>
             </div>
+            <PwaInstallCard className="mx-auto mt-6 max-w-md md:mx-0" variant="panel" />
           </div>
           <div className="mx-auto w-full max-w-sm overflow-hidden rounded-3xl border bg-white/90 text-left shadow-2xl shadow-sky-950/10 backdrop-blur">
             <div className="flex items-center gap-3 border-b bg-card/80 px-4 py-3">
