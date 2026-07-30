@@ -36,7 +36,7 @@ function DropdownMenuContent({
     <div
       data-slot="dropdown-menu-content"
       className={cn(
-        "absolute right-0 z-20 mt-2 grid min-w-32 gap-1 rounded-2xl border bg-white p-1.5 shadow-lg shadow-sky-950/10",
+        "absolute right-0 z-50 mt-2 grid min-w-32 gap-1 rounded-2xl border bg-white p-1.5 shadow-lg shadow-sky-950/10",
         className,
       )}
       {...props}

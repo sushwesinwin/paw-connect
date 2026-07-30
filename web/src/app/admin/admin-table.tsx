@@ -43,7 +43,6 @@ import {
   Check,
   ChevronDown,
   Download,
-  MoreHorizontal,
   Pencil,
   Plus,
   Search,
@@ -278,38 +277,27 @@ export function AdminTable({
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="ml-auto"
-                          aria-label="Open row actions"
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className={rowActionClass}
+                          disabled={saving}
+                          type="button"
+                          onClick={() => openEdit(row)}
                         >
-                          <MoreHorizontal className="size-4" aria-hidden="true" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="min-w-40">
-                          <DropdownMenuItem
-                            disabled={saving}
-                            onClick={(event) => {
-                              closeMenu(event);
-                              openEdit(row);
-                            }}
-                          >
-                            <Pencil className="size-4" aria-hidden="true" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10"
-                            disabled={saving}
-                            onClick={(event) => {
-                              closeMenu(event);
-                              void deleteRow(row);
-                            }}
-                          >
-                            <Trash2 className="size-4" aria-hidden="true" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <Pencil className="size-4" aria-hidden="true" />
+                          <span className="sr-only">Edit</span>
+                        </button>
+                        <button
+                          className={cn(rowActionClass, "text-destructive hover:bg-destructive/10")}
+                          disabled={saving}
+                          type="button"
+                          onClick={() => void deleteRow(row)}
+                        >
+                          <Trash2 className="size-4" aria-hidden="true" />
+                          <span className="sr-only">Delete</span>
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -617,15 +605,18 @@ function StatusFilter({
   onChange: (value: string) => void;
 }) {
   return (
-    <DropdownMenu className="w-full md:w-48">
+    <DropdownMenu className="w-full md:w-56">
       <DropdownMenuTrigger
         className="flex h-10 w-full justify-between rounded-full border-border bg-white px-4 text-sm text-foreground shadow-sm hover:bg-muted/40"
         aria-label="Filter by status"
       >
-        <span>{value}</span>
+        <span className="flex min-w-0 items-center gap-1">
+          <span className="text-muted-foreground">Filter:</span>
+          <span className="truncate">{value}</span>
+        </span>
         <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="left-0 right-auto w-full min-w-48 gap-1 rounded-2xl p-1.5">
+      <DropdownMenuContent className="left-0 right-auto w-full min-w-56 gap-1 rounded-2xl p-1.5">
         {["All statuses", ...options].map((option) => (
           <DropdownMenuItem
             key={option}
@@ -880,3 +871,5 @@ function titleCase(value: string) {
 
 const controlClass =
   "inline-flex h-9 items-center justify-center gap-2 rounded-full border bg-white px-3 text-sm hover:bg-muted";
+const rowActionClass =
+  "inline-grid size-8 place-items-center rounded-full border bg-white transition hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
