@@ -7,9 +7,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Services", href: "#services" },
-  { label: "Features", href: "#features" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Services", href: "/#services" },
   { label: "Admin", href: "/admin" },
 ];
 
@@ -44,22 +43,22 @@ export function AppNav() {
     >
       <div className="relative mx-auto flex w-full max-w-full flex-col gap-2 rounded-2xl border bg-white/90 px-3 py-2.5 shadow-lg shadow-sky-950/5 backdrop-blur sm:w-fit md:flex-row md:items-center md:gap-5 md:rounded-full md:px-5 md:py-3">
         <div className="flex items-center justify-between gap-2">
-          <a href="#chat" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <PawPrint className="size-5 text-primary" aria-hidden="true" />
             <span className="font-heading text-base font-semibold text-primary md:text-lg">
               PawConnect
             </span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2 md:hidden">
-            <a
-              href="#chat"
+            <Link
+              href="/assistant"
               className={cn(
                 buttonVariants(),
                 "h-9 rounded-full px-3 text-sm font-normal sm:px-4",
               )}
             >
               Ask PawConnect
-            </a>
+            </Link>
             <button
               type="button"
               className="grid size-9 place-items-center rounded-full border text-foreground"
@@ -100,15 +99,15 @@ export function AppNav() {
             );
           })}
         </nav>
-        <a
-          href="#chat"
+        <Link
+          href="/assistant"
           className={cn(
             buttonVariants(),
             "hidden h-10 rounded-full px-6 text-base font-normal md:inline-flex",
           )}
         >
           Ask PawConnect
-        </a>
+        </Link>
       </div>
     </header>
   );

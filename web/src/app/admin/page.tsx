@@ -141,8 +141,8 @@ export default async function AdminPage({
 
   return (
     <main className="min-h-screen bg-[linear-gradient(90deg,white,oklch(0.98_0.012_220)_45%,white)] text-foreground">
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[280px_minmax(0,1fr)] md:px-6">
-        <Card className="bg-white/95 p-4 lg:sticky lg:top-5 lg:flex lg:h-[calc(100svh-2.5rem)] lg:flex-col">
+      <div className="mx-auto grid max-w-7xl gap-4 px-3 py-3 md:px-6 md:py-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Card className="bg-white/95 p-3 md:p-4 lg:sticky lg:top-5 lg:flex lg:h-[calc(100svh-2.5rem)] lg:flex-col">
           <div className="min-w-0 flex-1">
             <div className="rounded-2xl bg-primary/5 p-3">
               <Link href="/" className="flex items-center gap-2">
@@ -154,10 +154,7 @@ export default async function AdminPage({
               <p className="mt-1 text-xs text-muted-foreground">Admin dashboard</p>
             </div>
 
-            <p className="mt-6 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Services
-            </p>
-            <nav className="mt-2 grid gap-1" aria-label="Admin navigation">
+            <nav className="mt-3 grid grid-cols-4 gap-1 md:mt-6 md:grid-cols-1" aria-label="Admin navigation">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.key === activeKey;
@@ -165,19 +162,21 @@ export default async function AdminPage({
                 return (
                   <Link
                     key={item.label}
+                    aria-label={item.label}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition",
+                      "flex h-11 items-center justify-center rounded-xl px-3 text-sm transition md:h-auto md:justify-start md:gap-2 md:py-2.5",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                     href={`/admin?section=${item.key}`}
+                    title={item.label}
                   >
                     <Icon className="size-4" aria-hidden="true" />
-                    <span className="min-w-0 flex-1">{item.label}</span>
+                    <span className="hidden min-w-0 flex-1 md:inline">{item.label}</span>
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-xs",
+                        "hidden rounded-full px-2 py-0.5 text-xs md:inline",
                         isActive
                           ? "bg-white/20 text-primary-foreground"
                           : "bg-muted text-muted-foreground",
@@ -191,11 +190,11 @@ export default async function AdminPage({
             </nav>
           </div>
 
-          <div className="mt-6 grid gap-2 border-t pt-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 md:mt-6 md:grid-cols-1 md:pt-4">
             <Link
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-10 w-full rounded-full",
+                "h-10 w-full rounded-full text-sm",
               )}
               href="/"
             >
@@ -205,7 +204,7 @@ export default async function AdminPage({
               <button
                 className={cn(
                   buttonVariants({ variant: "destructive" }),
-                  "h-10 w-full rounded-full",
+                  "h-10 w-full rounded-full text-sm",
                 )}
                 type="submit"
               >
@@ -218,12 +217,14 @@ export default async function AdminPage({
 
         <section className="min-w-0 space-y-5">
           <Card className="bg-white/90">
-            <CardHeader>
-            <p className="text-sm font-medium text-primary">PawConnect Admin</p>
-            <h1 className="font-heading text-3xl font-normal">Pet Care Admin</h1>
-            <CardDescription className="max-w-2xl leading-6">
-              Manage {activeTable.title.toLowerCase()} users receive from Milo.
-            </CardDescription>
+            <CardHeader className="px-4 py-4 md:px-6 md:py-6">
+              <p className="text-sm font-medium text-primary">PawConnect Admin</p>
+              <h1 className="font-heading text-2xl font-normal md:text-3xl">
+                Pet Care Admin
+              </h1>
+              <CardDescription className="max-w-2xl leading-6">
+                Manage {activeTable.title.toLowerCase()} users receive from Milo.
+              </CardDescription>
             </CardHeader>
           </Card>
 

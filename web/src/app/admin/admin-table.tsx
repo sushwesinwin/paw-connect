@@ -242,8 +242,8 @@ export function AdminTable({
 
   return (
     <>
-      <Card id={section} className="scroll-mt-5">
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <Card id={section} className="scroll-mt-5 overflow-hidden">
+        <CardHeader className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-6">
           <div>
             <CardTitle>{title}</CardTitle>
             <CardDescription>
@@ -252,7 +252,7 @@ export function AdminTable({
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              className={cn(buttonVariants(), "h-9 rounded-full px-4")}
+              className={cn(buttonVariants(), "h-9 rounded-full px-3 text-sm md:px-4")}
               type="button"
               onClick={openAdd}
             >
@@ -262,7 +262,7 @@ export function AdminTable({
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-4 pb-4 md:px-6 md:pb-6">
           <div className="flex flex-col gap-2 md:flex-row">
             <label className="relative flex-1">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -280,14 +280,14 @@ export function AdminTable({
             />
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <Table>
+          <div className="mt-4 w-full overflow-x-auto rounded-2xl [-webkit-overflow-scrolling:touch]">
+            <Table className="min-w-[920px] whitespace-nowrap md:min-w-[1040px]">
               <TableHeader>
                 <TableRow>
                   {columns.map((column) => (
                     <TableHead key={column}>{column}</TableHead>
                   ))}
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-[128px] text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -302,8 +302,8 @@ export function AdminTable({
                         )}
                       </TableCell>
                     ))}
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="w-[128px]">
+                      <div className="flex justify-center gap-1.5 md:gap-2">
                         <button
                           className={rowActionClass}
                           disabled={saving}
@@ -703,9 +703,9 @@ function StatusFilter({
   onChange: (value: string) => void;
 }) {
   return (
-    <DropdownMenu className="w-full md:w-56">
+    <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-10 w-full justify-between rounded-full border-border bg-white px-4 text-sm text-foreground shadow-sm hover:bg-muted/40"
+        className="flex h-10 w-full justify-between rounded-full border border-border bg-white px-4 text-sm text-foreground shadow-sm hover:bg-muted/40 md:w-56"
         aria-label="Filter by status"
       >
         <span className="flex min-w-0 items-center gap-1">
@@ -1018,4 +1018,4 @@ function titleCase(value: string) {
 }
 
 const rowActionClass =
-  "inline-grid size-8 place-items-center rounded-full border bg-white transition hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
+  "inline-grid size-9 place-items-center rounded-full border bg-white transition hover:bg-muted disabled:pointer-events-none disabled:opacity-50 md:size-8";
