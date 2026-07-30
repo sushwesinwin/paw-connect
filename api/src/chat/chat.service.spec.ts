@@ -18,6 +18,9 @@ describe('ChatService', () => {
     petListing: {
       create: jest.fn().mockResolvedValue({ id: 'listing-1' }),
     },
+    staffMember: {
+      findMany: jest.fn(),
+    },
   };
   const knowledgeService = {
     searchForContext: jest.fn().mockResolvedValue([
@@ -122,6 +125,37 @@ describe('ChatService', () => {
         contactName: 'Su',
         contactEmail: 'su@example.com',
       }),
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('answers staff availability from database records', async () => {
+    prisma.staffMember.findMany.mockResolvedValue([
+      {
+        name: 'Dr. Maya Lee',
+        role: 'VET',
+        specialty: 'General check-up',
+        availableDays: ['Monday', 'Friday'],
+        startTime: '09:00',
+        endTime: '13:00',
+      },
+    ]);
+
+    await expect(
+      service.create({ message: 'Who is available for vet service?' }),
+    ).resolves.toEqual({
+      sessionId: 'session-1',
+      answer:
+        'Available staff:\n- Dr. Maya Lee (Vet): General check-up. Available Monday, Friday from 09:00 to 13:00.',
+      citations: [{ title: 'Staff availability', category: 'services' }],
+    });
+
+    expect(prisma.staffMember.findMany).toHaveBeenCalledWith({
+      where: {
+        role: 'VET',
+        status: 'AVAILABLE',
+      },
+      orderBy: [{ role: 'asc' }, { name: 'asc' }],
     });
     expect(global.fetch).not.toHaveBeenCalled();
   });

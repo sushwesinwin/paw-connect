@@ -4,7 +4,12 @@ import {
   Injectable,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ChatRole, ListingType, ServiceType } from '@prisma/client';
+import {
+  ChatRole,
+  ListingType,
+  ServiceType,
+  StaffRole,
+} from '@prisma/client';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -110,6 +115,10 @@ export class ChatService {
     const previousAssistant = [...history]
       .reverse()
       .find((item) => item.role === ChatRole.ASSISTANT)?.content.toLowerCase();
+
+    if (this.isStaffAvailabilityIntent(text)) {
+      return this.handleStaffAvailability(text);
+    }
 
     if (
       this.isAppointmentIntent(text) ||
@@ -246,6 +255,43 @@ export class ChatService {
     };
   }
 
+  private async handleStaffAvailability(text: string): Promise<WorkflowResponse> {
+    const role = inferStaffRole(text);
+    const staff = await this.prisma.staffMember.findMany({
+      where: {
+        role,
+        status: 'AVAILABLE',
+      },
+      orderBy: [{ role: 'asc' }, { name: 'asc' }],
+    });
+
+    if (!staff.length) {
+      return {
+        answer: role
+          ? `No available ${role.toLowerCase()} staff are listed right now.`
+          : 'No available vet or grooming staff are listed right now.',
+        citations: [{ title: 'Staff availability', category: 'services' }],
+      };
+    }
+
+    return {
+      answer: `Available staff:\n${staff
+        .map(
+          (member) =>
+            `- ${member.name} (${titleCase(member.role)}): ${member.specialty}. Available ${member.availableDays.join(', ')} from ${member.startTime} to ${member.endTime}.`,
+        )
+        .join('\n')}`,
+      citations: [{ title: 'Staff availability', category: 'services' }],
+    };
+  }
+
+  private isStaffAvailabilityIntent(text: string) {
+    return (
+      /(available|availability|who.*available|which.*available|staff)/.test(text) &&
+      /(vet|groom|gromm|service)/.test(text)
+    );
+  }
+
   private isAppointmentIntent(text: string) {
     if (/how often|how do i|should i groom|tips|advice/.test(text)) {
       return false;
@@ -372,10 +418,28 @@ function inferServiceType(text: string) {
   return undefined;
 }
 
+function inferStaffRole(text: string) {
+  if (/groom|gromm/.test(text)) {
+    return StaffRole.GROOMER;
+  }
+  if (/vet|doctor/.test(text)) {
+    return StaffRole.VET;
+  }
+  return undefined;
+}
+
 function inferListingType(text: string) {
   const lower = text.toLowerCase();
   if (/lost|missing/.test(lower)) return ListingType.LOST;
   if (/found/.test(lower)) return ListingType.FOUND;
   if (/adopt|adoption/.test(lower)) return ListingType.ADOPTION;
   return undefined;
+}
+
+function titleCase(value: string) {
+  return value
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
