@@ -1,4 +1,11 @@
-const { PrismaClient, ListingType, ServiceType } = require('@prisma/client');
+const {
+  AppointmentStatus,
+  PrismaClient,
+  ListingType,
+  ServiceType,
+  StaffRole,
+  StaffStatus,
+} = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -6,6 +13,7 @@ async function main() {
   await prisma.chatMessage.deleteMany();
   await prisma.chatSession.deleteMany();
   await prisma.appointmentRequest.deleteMany();
+  await prisma.staffMember.deleteMany();
   await prisma.petListing.deleteMany();
   await prisma.knowledgeDocument.deleteMany();
 
@@ -95,16 +103,100 @@ async function main() {
     ],
   });
 
-  await prisma.appointmentRequest.create({
-    data: {
-      serviceType: ServiceType.GROOMING,
-      petName: 'Buddy',
-      petType: 'Dog',
-      preferredAt: new Date('2026-08-02T10:00:00.000Z'),
-      contactName: 'Alex',
-      contactPhone: '+65 9222 2222',
-      notes: 'Demo grooming request for a golden retriever.',
-    },
+  await prisma.appointmentRequest.createMany({
+    data: [
+      {
+        serviceType: ServiceType.GROOMING,
+        petName: 'Buddy',
+        petType: 'Dog',
+        preferredAt: new Date('2026-08-02T10:00:00.000Z'),
+        contactName: 'Alex Tan',
+        contactPhone: '+65 9222 2222',
+        notes: 'Full grooming request for a golden retriever.',
+        status: AppointmentStatus.PENDING,
+      },
+      {
+        serviceType: ServiceType.VET,
+        petName: 'Luna',
+        petType: 'Cat',
+        preferredAt: new Date('2026-08-03T04:30:00.000Z'),
+        contactName: 'Maya Lee',
+        contactEmail: 'maya@example.com',
+        notes: 'Annual wellness check and vaccine advice.',
+        status: AppointmentStatus.CONFIRMED,
+      },
+      {
+        serviceType: ServiceType.GROOMING,
+        petName: 'Coco',
+        petType: 'Dog',
+        preferredAt: new Date('2026-08-04T06:00:00.000Z'),
+        contactName: 'Daniel Koh',
+        contactPhone: '+65 9333 3333',
+        notes: 'Bath, dry, nail trim, and ear cleaning.',
+        status: AppointmentStatus.CONFIRMED,
+      },
+      {
+        serviceType: ServiceType.VET,
+        petName: 'Nala',
+        petType: 'Rabbit',
+        preferredAt: new Date('2026-08-05T03:00:00.000Z'),
+        contactName: 'Sarah Lim',
+        contactEmail: 'sarah@example.com',
+        notes: 'Eating less than usual. Needs vet review.',
+        status: AppointmentStatus.PENDING,
+      },
+      {
+        serviceType: ServiceType.GROOMING,
+        petName: 'Mochi',
+        petType: 'Cat',
+        preferredAt: new Date('2026-08-06T08:00:00.000Z'),
+        contactName: 'Rose White',
+        contactPhone: '+65 9444 4444',
+        notes: 'Long-hair cat de-matting and hygiene trim.',
+        status: AppointmentStatus.CANCELLED,
+      },
+    ],
+  });
+
+  await prisma.staffMember.createMany({
+    data: [
+      {
+        name: 'Dr. Maya Lee',
+        role: StaffRole.VET,
+        specialty: 'General check-up and vaccinations',
+        availableDays: ['Monday', 'Wednesday', 'Friday'],
+        startTime: '09:00',
+        endTime: '13:00',
+        status: StaffStatus.AVAILABLE,
+      },
+      {
+        name: 'Dr. Aaron Tan',
+        role: StaffRole.VET,
+        specialty: 'Skin allergies and senior pet care',
+        availableDays: ['Tuesday', 'Thursday'],
+        startTime: '14:00',
+        endTime: '18:00',
+        status: StaffStatus.AVAILABLE,
+      },
+      {
+        name: 'Nora Groom',
+        role: StaffRole.GROOMER,
+        specialty: 'Full grooming and de-matting',
+        availableDays: ['Monday', 'Tuesday', 'Saturday'],
+        startTime: '10:00',
+        endTime: '17:00',
+        status: StaffStatus.AVAILABLE,
+      },
+      {
+        name: 'Ben Lee',
+        role: StaffRole.GROOMER,
+        specialty: 'Bath, nail trim, and hygiene cut',
+        availableDays: ['Wednesday', 'Friday', 'Sunday'],
+        startTime: '11:00',
+        endTime: '16:00',
+        status: StaffStatus.BUSY,
+      },
+    ],
   });
 }
 

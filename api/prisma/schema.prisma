@@ -23,6 +23,18 @@ enum ServiceType {
   GROOMING
 }
 
+enum StaffRole {
+  VET
+  GROOMER
+}
+
+enum StaffStatus {
+  AVAILABLE
+  BUSY
+  OFF_DUTY
+  ON_LEAVE
+}
+
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -93,5 +105,21 @@ model AppointmentRequest {
   updatedAt    DateTime          @updatedAt
 
   @@index([serviceType])
+  @@index([status])
+}
+
+model StaffMember {
+  id            String      @id @default(cuid())
+  name          String
+  role          StaffRole
+  specialty     String
+  availableDays String[]    @default([])
+  startTime     String
+  endTime       String
+  status        StaffStatus @default(AVAILABLE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([role])
   @@index([status])
 }
