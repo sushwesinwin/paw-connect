@@ -132,6 +132,7 @@ export default async function AdminPage({
         : lostFoundListings;
   const activeAppointments = activeKey === "vet-grooming" ? appointments : [];
   const activeStaff = activeKey === "staff" ? staff : [];
+  const ActiveIcon = sidebarItems.find((item) => item.key === activeKey)?.icon ?? PawPrint;
   const counts: Record<SectionKey, number> = {
     adoption: adoptionListings.length,
     "lost-found": lostFoundListings.length,
@@ -140,21 +141,23 @@ export default async function AdminPage({
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(90deg,white,oklch(0.98_0.012_220)_45%,white)] text-foreground">
-      <div className="mx-auto grid max-w-7xl gap-4 px-3 py-3 md:px-6 md:py-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Card className="bg-white/95 p-3 md:p-4 lg:sticky lg:top-5 lg:flex lg:h-[calc(100svh-2.5rem)] lg:flex-col">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_78%_8%,oklch(0.9_0.08_210),transparent_28%),linear-gradient(90deg,white,oklch(0.98_0.012_220)_45%,white)] text-foreground">
+      <div className="mx-auto grid max-w-7xl gap-3 px-2.5 py-2.5 sm:px-4 md:gap-4 md:px-6 md:py-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Card className="overflow-hidden bg-white/95 p-0 shadow-xl shadow-sky-950/5 lg:sticky lg:top-5 lg:flex lg:h-[calc(100svh-2.5rem)] lg:flex-col">
           <div className="min-w-0 flex-1">
-            <div className="rounded-2xl bg-primary/5 p-3">
+            <div className="bg-zinc-950 p-3 text-white md:p-4">
               <Link href="/" className="flex items-center gap-2">
-                <PawPrint className="size-5 text-primary" aria-hidden="true" />
-                <span className="font-heading text-lg font-semibold text-primary">
+                <span className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary md:size-9">
+                  <PawPrint className="size-4 md:size-5" aria-hidden="true" />
+                </span>
+                <span className="font-heading text-base font-semibold md:text-lg">
                   PawConnect
                 </span>
               </Link>
-              <p className="mt-1 text-xs text-muted-foreground">Admin dashboard</p>
+              <p className="mt-1 text-xs text-zinc-400 md:mt-2">Admin dashboard</p>
             </div>
 
-            <nav className="mt-3 grid grid-cols-4 gap-1 md:mt-6 md:grid-cols-1" aria-label="Admin navigation">
+            <nav className="grid grid-cols-2 gap-1.5 p-2.5 md:grid-cols-1 md:p-4" aria-label="Admin navigation">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.key === activeKey;
@@ -164,16 +167,16 @@ export default async function AdminPage({
                     key={item.label}
                     aria-label={item.label}
                     className={cn(
-                      "flex h-11 items-center justify-center rounded-xl px-3 text-sm transition md:h-auto md:justify-start md:gap-2 md:py-2.5",
+                      "flex h-10 items-center justify-start gap-2 rounded-xl px-2.5 text-xs transition sm:text-sm md:h-auto md:px-3 md:py-2.5",
                       isActive
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-orange-500/15"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                     href={`/admin?section=${item.key}`}
                     title={item.label}
                   >
-                    <Icon className="size-4" aria-hidden="true" />
-                    <span className="hidden min-w-0 flex-1 md:inline">{item.label}</span>
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
                     <span
                       className={cn(
                         "hidden rounded-full px-2 py-0.5 text-xs md:inline",
@@ -190,11 +193,11 @@ export default async function AdminPage({
             </nav>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 md:mt-6 md:grid-cols-1 md:pt-4">
+          <div className="grid grid-cols-2 gap-2 border-t p-2.5 md:grid-cols-1 md:p-4">
             <Link
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-10 w-full rounded-full text-sm",
+                "h-9 w-full rounded-full text-xs sm:text-sm md:h-10",
               )}
               href="/"
             >
@@ -204,7 +207,7 @@ export default async function AdminPage({
               <button
                 className={cn(
                   buttonVariants({ variant: "destructive" }),
-                  "h-10 w-full rounded-full text-sm",
+                  "h-9 w-full rounded-full text-xs sm:text-sm md:h-10",
                 )}
                 type="submit"
               >
@@ -215,25 +218,38 @@ export default async function AdminPage({
           </div>
         </Card>
 
-        <section className="min-w-0 space-y-5">
-          <Card className="bg-white/90">
-            <CardHeader className="px-4 py-4 md:px-6 md:py-6">
-              <p className="text-sm font-medium text-primary">PawConnect Admin</p>
-              <h1 className="font-heading text-2xl font-normal md:text-3xl">
-                Pet Care Admin
-              </h1>
-              <CardDescription className="max-w-2xl leading-6">
-                Manage {activeTable.title.toLowerCase()} users receive from Milo.
-              </CardDescription>
+        <section className="min-w-0 space-y-4 md:space-y-5">
+          <Card className="overflow-hidden bg-white/90 shadow-xl shadow-sky-950/5">
+            <CardHeader className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-6">
+              <div>
+                <p className="text-sm font-medium text-primary">PawConnect Admin</p>
+                <h1 className="font-heading text-xl font-normal leading-tight sm:text-2xl md:text-3xl">
+                  {activeTable.title}
+                </h1>
+                <CardDescription className="mt-1 max-w-2xl text-sm leading-6">
+                  Manage records users receive from Milo.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+                <span className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary md:size-10">
+                  <ActiveIcon className="size-4 md:size-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total records</p>
+                  <p className="font-heading text-xl font-medium md:text-2xl">
+                    {counts[activeKey]}
+                  </p>
+                </div>
+              </div>
             </CardHeader>
           </Card>
 
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid gap-2 sm:grid-cols-2 md:gap-3 lg:grid-cols-3">
             {activeSummary.map(([label, value]) => (
-              <Card key={label}>
-                <CardContent className="p-4">
+              <Card key={label} className="bg-white/90 shadow-lg shadow-sky-950/5">
+                <CardContent className="flex items-center justify-between gap-3 p-3 md:block md:p-5">
                   <p className="text-sm text-muted-foreground">{label}</p>
-                  <p className="mt-2 font-heading text-2xl font-medium">{value}</p>
+                  <p className="font-heading text-2xl font-medium md:mt-2">{value}</p>
                 </CardContent>
               </Card>
             ))}

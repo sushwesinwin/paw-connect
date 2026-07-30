@@ -131,6 +131,7 @@ export function AdminTable({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [modal, setModal] = useState<ModalState>(null);
+  const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
   const [saving, setSaving] = useState(false);
   const rows = useMemo(
     () => getRows(section, listings, appointments, staff),
@@ -217,21 +218,22 @@ export function AdminTable({
     }
   }
 
-  async function deleteRow(row: AdminRow) {
-    if (!window.confirm("Delete this record? This cannot be undone.")) {
+  async function deleteRow() {
+    if (!pendingDelete) {
       return;
     }
 
     try {
       setSaving(true);
-      if (row.kind === "staff") {
-        await deleteStaff(row.id);
-      } else if (row.kind === "appointment") {
-        await deleteAppointment(row.id);
+      if (pendingDelete.kind === "staff") {
+        await deleteStaff(pendingDelete.id);
+      } else if (pendingDelete.kind === "appointment") {
+        await deleteAppointment(pendingDelete.id);
       } else {
-        await deleteListing(row.id);
+        await deleteListing(pendingDelete.id);
       }
       gooeyToast.success("Record deleted");
+      setPendingDelete(null);
       startTransition(() => router.refresh());
     } catch (error) {
       showToastError(error, "Could not delete");
@@ -242,17 +244,17 @@ export function AdminTable({
 
   return (
     <>
-      <Card id={section} className="scroll-mt-5 overflow-hidden">
-        <CardHeader className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-6">
+      <Card id={section} className="scroll-mt-5 overflow-hidden shadow-lg shadow-sky-950/5">
+        <CardHeader className="flex flex-col gap-3 px-3 py-3 sm:px-4 sm:py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-6">
           <div>
             <CardTitle>{title}</CardTitle>
-            <CardDescription>
-              Search, filter, export, add, and edit records.
+            <CardDescription className="text-sm">
+              Search, filter, add, and edit records.
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              className={cn(buttonVariants(), "h-9 rounded-full px-3 text-sm md:px-4")}
+              className={cn(buttonVariants(), "h-10 w-full rounded-full px-3 text-sm sm:w-auto md:px-4")}
               type="button"
               onClick={openAdd}
             >
@@ -262,7 +264,7 @@ export function AdminTable({
           </div>
         </CardHeader>
 
-        <CardContent className="px-4 pb-4 md:px-6 md:pb-6">
+        <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6 md:pb-6">
           <div className="flex flex-col gap-2 md:flex-row">
             <label className="relative flex-1">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -280,7 +282,72 @@ export function AdminTable({
             />
           </div>
 
-          <div className="mt-4 w-full overflow-x-auto rounded-2xl [-webkit-overflow-scrolling:touch]">
+          <div className="mt-3 grid gap-2.5 md:hidden">
+            {visibleRows.map((row) => (
+              <article
+                key={row.id}
+                className="rounded-2xl border bg-white p-3 shadow-sm"
+              >
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-heading text-base font-medium">
+                      {row.cells[0] || title}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {row.cells[1] || row.kind}
+                    </p>
+                  </div>
+                  <StatusBadge status={row.status} />
+                </div>
+                <dl className="grid gap-1.5 text-sm">
+                  {row.cells.slice(2, 6).map((value, index) => (
+                    <div
+                      key={`${row.id}-${columns[index + 2]}`}
+                      className="grid grid-cols-[96px_minmax(0,1fr)] gap-2"
+                    >
+                      <dt className="text-muted-foreground">
+                        {columns[index + 2]}
+                      </dt>
+                      <dd className="min-w-0 break-words text-foreground">
+                        {value || "-"}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full")}
+                    disabled={saving}
+                    type="button"
+                    onClick={() => openEdit(row)}
+                  >
+                    <Pencil className="size-4" aria-hidden="true" />
+                    Edit
+                  </button>
+                  <button
+                    className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full text-destructive hover:bg-destructive/10")}
+                    disabled={saving}
+                    type="button"
+                    onClick={() => setPendingDelete(row)}
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {!visibleRows.length ? (
+            <div className="mt-4 rounded-2xl border border-dashed bg-white/70 px-4 py-8 text-center">
+              <p className="font-heading text-lg font-medium">No records found</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try another search or add a new record.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-4 hidden w-full overflow-x-auto rounded-2xl md:block">
             <Table className="min-w-[920px] whitespace-nowrap md:min-w-[1040px]">
               <TableHeader>
                 <TableRow>
@@ -317,7 +384,7 @@ export function AdminTable({
                           className={cn(rowActionClass, "text-destructive hover:bg-destructive/10")}
                           disabled={saving}
                           type="button"
-                          onClick={() => void deleteRow(row)}
+                          onClick={() => setPendingDelete(row)}
                         >
                           <Trash2 className="size-4" aria-hidden="true" />
                           <span className="sr-only">Delete</span>
@@ -337,9 +404,9 @@ export function AdminTable({
       </Card>
 
       {modal ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/25 px-4">
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/25 px-3 pb-3 sm:place-items-center sm:px-4 sm:pb-0">
           <form
-            className="max-h-[90svh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl"
+            className="max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:p-5"
             onSubmit={submit}
           >
             <div className="flex items-start justify-between gap-4">
@@ -381,7 +448,7 @@ export function AdminTable({
               )}
             </div>
 
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
               <button
                 className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full px-4")}
                 type="button"
@@ -398,6 +465,44 @@ export function AdminTable({
               </button>
             </div>
           </form>
+        </div>
+      ) : null}
+
+      {pendingDelete ? (
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/25 px-3 pb-3 sm:place-items-center sm:px-4 sm:pb-0">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="grid size-11 place-items-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="size-5" aria-hidden="true" />
+            </div>
+            <h2 className="mt-4 font-heading text-2xl font-medium">
+              Delete record?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {pendingDelete.cells[0] || "this record"}
+              </span>
+              .
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full")}
+                disabled={saving}
+                type="button"
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={cn(buttonVariants({ variant: "destructive" }), "h-10 rounded-full")}
+                disabled={saving}
+                type="button"
+                onClick={() => void deleteRow()}
+              >
+                {saving ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </>
