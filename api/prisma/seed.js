@@ -91,6 +91,8 @@ async function main() {
         description: 'Brown poodle last seen near Bedok Reservoir.',
         contactName: 'Sarah',
         contactPhone: '+65 9000 0000',
+        imageUrl:
+          'https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=1200&q=80',
       },
       {
         type: ListingType.FOUND,
@@ -99,6 +101,8 @@ async function main() {
         description: 'Grey cat found near a void deck, wearing a blue collar.',
         contactName: 'Daniel',
         contactPhone: '+65 9111 1111',
+        imageUrl:
+          'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1200&q=80',
       },
     ],
   });

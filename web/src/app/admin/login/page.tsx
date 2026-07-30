@@ -71,7 +71,12 @@ export default function AdminLoginPage() {
                 </p>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-5 rounded-2xl border bg-primary/5 p-3 text-sm leading-6 text-muted-foreground sm:p-4">
+              Use the production admin credentials configured in Vercel
+              environment variables.
+            </div>
+          )}
 
           <div className="mt-5 grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
