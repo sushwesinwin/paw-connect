@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Albert_Sans, Geist, Geist_Mono } from "next/font/google";
 import { GooeyToaster } from "@/components/ui/goey-toaster";
+import { ServiceWorkerRegister } from "./service-worker-register";
 import "./globals.css";
 import "goey-toast/styles.css";
 
@@ -27,6 +28,16 @@ export const metadata: Metadata = {
   description:
     "PawConnect is an AI pet care assistant for grooming, vet visits, adoption, and lost pet support.",
   applicationName: "PawConnect",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "PawConnect",
+    statusBarStyle: "black-translucent",
+  },
   keywords: [
     "PawConnect",
     "pet care",
@@ -62,6 +73,7 @@ export default function RootLayout({
       className={`${albertSans.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <ServiceWorkerRegister />
         {children}
         <GooeyToaster position="bottom-right" />
       </body>

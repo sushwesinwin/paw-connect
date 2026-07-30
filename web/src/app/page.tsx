@@ -12,6 +12,7 @@ import { Footer } from "./footer";
 import { LostFoundComposer } from "./lost-found-composer";
 import { LostFoundFeed } from "./lost-found-feed";
 import { AppNav } from "./nav";
+import { PwaInstallCard } from "./pwa-install-card";
 
 const services = [
   {
@@ -80,6 +81,7 @@ export default async function Home() {
             >
               Ask PawConnect
             </CtaLink>
+            <PwaInstallCard />
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
               {["Adoption", "Lost pets", "Vet care"].map((item) => (
                 <div
