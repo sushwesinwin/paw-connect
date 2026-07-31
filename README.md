@@ -309,36 +309,3 @@ npm run lint
 npm run build
 npm run start
 ```
-
-## Deployment
-
-Recommended deployment:
-
-- Frontend: Vercel
-- Backend: Render Web Service
-- Database: Render PostgreSQL
-
-Backend build command:
-
-```bash
-npm install && npx prisma generate && npx prisma migrate deploy && npm run build
-```
-
-Backend start command:
-
-```bash
-npm run start:prod
-```
-
-Frontend build command:
-
-```bash
-npm run build
-```
-
-Required deployment wiring:
-
-- Set `NEXT_PUBLIC_API_URL` in Vercel to the deployed API URL.
-- Set `FRONTEND_URL` in Render to the deployed frontend URL.
-- Set production admin credentials and session token in Vercel.
-- Set `DATABASE_URL` in Render API from the PostgreSQL service.
